@@ -49,32 +49,46 @@
             }
         
         const inputHandler = function(e) {
-            hex_result.placeholder = e.target.value;
-            dec_result.placeholder = e.target.value;
-            bin_result.placeholder = e.target.value;
-            char_result.placeholder = e.target.value;
-            console.log(e.target.value)
+            val = e.target.value;
+
             
             detected_str = "Auto-detected: ";
-            if (isBin(e.target.value))
+            if (isBin(val))
             {
-                console.log(e.target.value + " is a Bin value")
+                console.log(val + " is a Bin value")
                 detected_str += "Binary"
+                hex_val = "0x" + parseInt(val, 2).toString(16);
+                dec_val = parseInt(val, 2);
+                bin_val = val;
             }
-            else if (isDec(e.target.value))
+            else if (isDec(val))
             {
-                console.log(e.target.value + " is a Dec value")
+                console.log(val + " is a Dec value")
                 detected_str += "Decimal"
+                hex_val = val.toString(16);
+                dec_val = val;
+                bin_val = val.toString(2)
             }
-            else if (isHex(e.target.value))
+            else if (isHex(val))
             {
-                console.log(e.target.value + " is a Hex value")
+                console.log(val + " is a Hex value")
                 detected_str += "Hex"
+                hex_val = val;
+                dec_val = parseInt(val, 16);
+                bin_val = val.toString(2)
             }
-            else if (isChar(e.target.value))
+            else if (isChar(val))
             {
-                console.log(e.target.value + " is a Char value")
-                detected_str += "Char"
+                console.log(val + " is a ASCII value")
+                detected_str += "ASCII"
+                
+                if (val.length() == 1)
+                {
+                    hex_val = val.toString(16);
+                    dec_val = parseInt(val, 16);
+                    char_val = val
+                    bin_val = val.toString(2)
+                }
             }
             else
             {
@@ -82,9 +96,15 @@
             }
 
             document.getElementById("input_label").innerHTML = detected_str;
+            hex_result.placeholder = hex_val;
+            dec_result.placeholder = dec_val;
+            bin_result.placeholder = bin_val;
+            char_result.placeholder = char_val;
+            console.log(val)
         }
 
         input.addEventListener("input", inputHandler)
+
 
 
     </script>
