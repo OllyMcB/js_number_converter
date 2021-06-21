@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Converter</title>
+</head>
+<body>
+    <h1>Num Converter</h1>
+
+    <!-- <textarea id=input_box name="inbox"> -->
+    <form>
+        <input type="text" id="input" placeholder="Input"></input>
+        <input type="text" id="hex_box" placeholder="Hex"></input>
+        <input type="text" id="dec_box" placeholder="Dec"></input>
+        <input type="text" id="bin_box" placeholder="Bin"></input>
+        <input type="text" id="char_box" placeholder="Char"></input>
+
+    </form>
+
+
+    <script>
+        const input = document.getElementById("input")
+        const hex_result = document.getElementById("hex_box")
+        const dec_result = document.getElementById("dec_box")
+        const bin_result = document.getElementById("bin_box")
+        const char_result = document.getElementById("char_box")
+        
+        const inputHandler = function(e) {
+            document.getElementById("hex_box").innerHTML = e.target.value
+            hex_result.innerText = e.target.value;
+            dec_result.innerText = e.target.value;
+            bin_result.innerText = e.target.value;
+            console.log(e.target.value)
+        }
+
+        input.addEventListener("input", inputHandler)
+
+
+    </script>
+</body>
+</html>
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw a circle</title>
+</head>
+<body onload="draw('#FF0000', 150, 150, 45)">
+    <h1>Flappy Bird</h1>
+
+    <canvas id="circle" width="512" height="512"></canvas>
+
+    <button onclick="draw('#FFFF00', 300, 300, 80)">Magic!</button>
+
+    <script>
+        var x = 500;
+        var y = 100;
+        var colour = '#0000FF'
+        var dir = true;     // true = increment, false = decrement
+        var intervalId = window.setInterval(function(){
+        /// call your function here
+        document.getElementById('canvas')
+        clear_last()
+        draw(colour, x, y, 50, true);
+        if (y >= 900)
+        {
+            dir = false;
+            colour = '#00FFFF'
+        }
+        else if (y <= 100)
+        {
+            dir = true;
+            colour = '#0000FF'
+        }
+        if (dir)
+        {
+            y += 10;
+        }
+        else
+        {
+            y -= 10;
+        }
+        }, 50);
+    </script>
+
+    
+    <script src="flappy.js"></script>
+
+
+</body>
+</html> -->
