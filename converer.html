@@ -45,7 +45,7 @@
             return Boolean(num.match(/^(0x|0X)*[0-9a-f]+$/i))
             }
         function isChar(num) {
-            return Boolean(num.match(/^[A-Za-Z]+$/i))
+            return Boolean(num.match(/^\w+$/i))
             }
         
         const inputHandler = function(e) {
