@@ -11,10 +11,18 @@
 
     <!-- <textarea id=input_box name="inbox"> -->
     <form>
-        <input type="text" id="input" placeholder="Input"></input>
+        <!-- <label value="Auto-detect number type"></label> -->
+        <label id="input_label">Enter number</label> 
+        <input type="text" id="input" label="Here" placeholder="Input"></input>
+        <br></br>
+        
+        <label>Hex</label> 
         <input type="text" id="hex_box" placeholder="Hex"></input>
+        <label>Decimal</label> 
         <input type="text" id="dec_box" placeholder="Dec"></input>
+        <label>Binary</label> 
         <input type="text" id="bin_box" placeholder="Bin"></input>
+        <label>Character (ASCII)</label> 
         <input type="text" id="char_box" placeholder="Char"></input>
 
     </form>
@@ -26,13 +34,54 @@
         const dec_result = document.getElementById("dec_box")
         const bin_result = document.getElementById("bin_box")
         const char_result = document.getElementById("char_box")
+
+        function isDec(num) {
+            return Boolean(num.match(/^[0-9]+$/i))
+            }
+        function isBin(num) {
+            return Boolean(num.match(/^[01]+$/i))
+            }
+        function isHex(num) {
+            return Boolean(num.match(/^(0x|0X)*[0-9a-f]+$/i))
+            }
+        function isChar(num) {
+            return Boolean(num.match(/^[A-Za-Z]+$/i))
+            }
         
         const inputHandler = function(e) {
-            document.getElementById("hex_box").innerHTML = e.target.value
-            hex_result.innerText = e.target.value;
-            dec_result.innerText = e.target.value;
-            bin_result.innerText = e.target.value;
+            hex_result.placeholder = e.target.value;
+            dec_result.placeholder = e.target.value;
+            bin_result.placeholder = e.target.value;
+            char_result.placeholder = e.target.value;
             console.log(e.target.value)
+            
+            detected_str = "Auto-detected: ";
+            if (isBin(e.target.value))
+            {
+                console.log(e.target.value + " is a Bin value")
+                detected_str += "Binary"
+            }
+            else if (isDec(e.target.value))
+            {
+                console.log(e.target.value + " is a Dec value")
+                detected_str += "Decimal"
+            }
+            else if (isHex(e.target.value))
+            {
+                console.log(e.target.value + " is a Hex value")
+                detected_str += "Hex"
+            }
+            else if (isChar(e.target.value))
+            {
+                console.log(e.target.value + " is a Char value")
+                detected_str += "Char"
+            }
+            else
+            {
+                console.log("Format not detected");
+            }
+
+            document.getElementById("input_label").innerHTML = detected_str;
         }
 
         input.addEventListener("input", inputHandler)
