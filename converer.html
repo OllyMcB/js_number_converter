@@ -7,7 +7,8 @@
     <title>Number Converter</title>
 </head>
 <body>
-    <h1>Num Converter</h1>
+    <h1>Number Converter</h1>
+    <h4>Convert a number to different representations</h4>
 
     <!-- <textarea id=input_box name="inbox"> -->
     <form>
@@ -41,30 +42,93 @@
                 this.dec = 0;
                 // this.type = "None"
             }
+
+            bin_converter = { 
+                type: "Binary", 
+                match_str: /^[01]+$/i, 
+                to_dec: function(s) { 
+                        return parseInt(s, 2); 
+                    },
+                from_dec: function(d) {
+                    // handle leading zeros
+                    var leading_zeros = 8;
+                    if (d > 4294967295)
+                    {
+                        leading_zeros = 64;
+                    }
+                    else if (d > 65535)
+                    {
+                        leading_zeros = 32;
+                    }
+                    else if (d > 255)
+                    {
+                        leading_zeros = 16;
+                    }
+                    return Number(d).toString(2).padStart(leading_zeros, '0');
+                }};
+
+            dec_converter = { 
+                type: "Decimal", 
+                match_str: /^[0-9]+$/i, 
+                to_dec: function(s) { 
+                        return s; 
+                    },
+                from_dec: function(d) {
+                    return d;
+                }};
+
+            hex_converter = { 
+                type: "Hex", 
+                match_str: /^(0x|0X)*[0-9a-f]+$/i, 
+                to_dec: function(s) { 
+                        return parseInt(s, 16); 
+                    },
+                from_dec: function(d) {
+                    // handle leading zeros
+                    var leading_zeros = 2;
+                    if (d > 4294967295)
+                    {
+                        leading_zeros = 16;
+                    }
+                    else if (d > 65535)
+                    {
+                        leading_zeros = 8;
+                    }
+                    else if (d > 255)
+                    {
+                        leading_zeros = 4;
+                    }
+
+                    return "0x" + Number(d).toString(16).padStart(leading_zeros, '0').toUpperCase();
+                }};
+
+            ascii_converter = {
+                type: "ASCII", 
+                match_str: /^\w+$/i, 
+                to_dec: 
+                    function(s) {  
+                        if (s.length == 1)
+                        {
+                            return s.charCodeAt(0);
+                        }
+                        return NaN;
+                    },
+                from_dec: function(d) {
+                    return String.fromCharCode(d);
+                }};
+
+
             
             /**< Parse a string to a dec & determine the original type
              * @param num_str String containing the number to be converted
              */ 
             parse(num_str) {
                 const converters = [
-                    { type: "Binary", match_str: /^[01]+$/i, to_dec: function(s) { 
-                        parseInt(s, 2); 
-                    }},
-                    { type: "Decimal", match_str: /^[0-9]+$/i, to_dec: function(s) { 
-                        return s; 
-                    }},
-                    { type: "Hex", match_str: /^(0x|0X)*[0-9a-f]+$/i, to_dec: function(s) { 
-                        return parseInt(s, 16); 
-                    }},
-                    { type: "ASCII", match_str: /^\w+$/i, to_dec: 
-                    function(s) {  
-                        if (s.length() == 1)
-                        {
-                            return s.charCodeAt(0);
-                        }
-                        return "N/a"
-                    }}
-                ];
+                    this.bin_converter,
+                    this.dec_converter,
+                    this.hex_converter,
+                    this.ascii_converter];
+
                 console.log("Parsing value: " + num_str);
 
                 for(let conv of converters)
@@ -81,176 +145,59 @@
             }
 
             getType() {
-                return this.type;
+                return this.type["type"];
             }
-
 
             toDec() {
-                return this.dec;
+                return this.dec_converter.from_dec(this.dec);
             }
-
+            
             toHex() {
-                return "0x" + this.dec.toString(16).toUpperCase();
+                return this.hex_converter.from_dec(this.dec);
             }
-
+            
             toBin() {
-                return this.dec.toString(2);
+                return this.bin_converter.from_dec(this.dec);
             }
-
+            
             toASCII() {
-                return String.fromCharCode(this.dec);
+                return this.ascii_converter.from_dec(this.dec);
             }
         }
 
         document.getElementById("input").addEventListener("input", function(e)
         {
             console.log("Input number: " + e.target.value);
-            
-            var number = new NumberRep();
 
-            number.parse(e.target.value);
+            if (e.target.value != "")
+            {             
+                var number = new NumberRep();
+                
+                number.parse(e.target.value);
+                
+                label_val = "Auto-detected: " + number.getType();
+                hex_val = number.toHex();
+                dec_val = number.toDec();
+                bin_val = number.toBin();
+                ascii_val = number.toASCII();
+            }
+            else
+            {
+                label_val = "Enter number";
+                hex_val = "Hex";
+                dec_val = "Dec";
+                bin_val = "Bin";
+                ascii_val = "";
+            }
 
-            document.getElementById("input_label").innerHTML = "Auto-detected: " + number.getType();
-            document.getElementById("hex_box").placeholder = number.toHex();
-            document.getElementById("dec_box").placeholder = number.toDec();
-            document.getElementById("bin_box").placeholder = number.toBin();
-            document.getElementById("ascii_box").placeholder = number.toASCII();
+            document.getElementById("input_label").innerHTML = label_val;
+            document.getElementById("hex_box").placeholder = hex_val;
+            document.getElementById("dec_box").placeholder = dec_val;
+            document.getElementById("bin_box").placeholder = bin_val;
+            document.getElementById("ascii_box").placeholder = ascii_val;
 
         })
-
-        // const input = document.getElementById("input")
-        // const hex_result = document.getElementById("hex_box")
-        // const dec_result = document.getElementById("dec_box")
-        // const bin_result = document.getElementById("bin_box")
-        // const char_result = document.getElementById("char_box")
-
-        // function isDec(num) {
-        //     return Boolean(num.match(/^[0-9]+$/i))
-        //     }
-        // function isBin(num) {
-        //     return Boolean(num.match(/^[01]+$/i))
-        //     }
-        // function isHex(num) {
-        //     return Boolean(num.match(/^(0x|0X)*[0-9a-f]+$/i))
-        //     }
-        // function isChar(num) {
-        //     return Boolean(num.match(/^\w+$/i))
-        //     }
-        
-        // const inputHandler = function(e) {
-        //     val = e.target.value;
-
-            
-        //     detected_str = "Auto-detected: ";
-        //     if (isBin(val))
-        //     {
-        //         console.log(val + " is a Bin value")
-        //         detected_str += "Binary"
-        //         hex_val = "0x" + parseInt(val, 2).toString(16);
-        //         dec_val = parseInt(val, 2);
-        //         bin_val = val;
-        //     }
-        //     else if (isDec(val))
-        //     {
-        //         console.log(val + " is a Dec value")
-        //         detected_str += "Decimal"
-        //         hex_val = val.toString(16);
-        //         dec_val = val;
-        //         bin_val = val.toString(2)
-        //     }
-        //     else if (isHex(val))
-        //     {
-        //         console.log(val + " is a Hex value")
-        //         detected_str += "Hex"
-        //         hex_val = val;
-        //         dec_val = parseInt(val, 16);
-        //         bin_val = val.toString(2)
-        //     }
-        //     else if (isChar(val))
-        //     {
-        //         console.log(val + " is a ASCII value")
-        //         detected_str += "ASCII"
-                
-        //         if (val.length() == 1)
-        //         {
-        //             hex_val = val.toString(16);
-        //             dec_val = parseInt(val, 16);
-        //             char_val = val
-        //             bin_val = val.toString(2)
-        //         }
-        //     }
-        //     else
-        //     {
-        //         console.log("Format not detected");
-        //     }
-
-        //     document.getElementById("input_label").innerHTML = detected_str;
-        //     hex_result.placeholder = hex_val;
-        //     dec_result.placeholder = dec_val;
-        //     bin_result.placeholder = bin_val;
-        //     char_result.placeholder = char_val;
-        //     console.log(val)
-        // }
-
-        // input.addEventListener("input", inputHandler)
-
-
 
     </script>
 </body>
 </html>
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Draw a circle</title>
-</head>
-<body onload="draw('#FF0000', 150, 150, 45)">
-    <h1>Flappy Bird</h1>
-
-    <canvas id="circle" width="512" height="512"></canvas>
-
-    <button onclick="draw('#FFFF00', 300, 300, 80)">Magic!</button>
-
-    <script>
-        var x = 500;
-        var y = 100;
-        var colour = '#0000FF'
-        var dir = true;     // true = increment, false = decrement
-        var intervalId = window.setInterval(function(){
-        /// call your function here
-        document.getElementById('canvas')
-        clear_last()
-        draw(colour, x, y, 50, true);
-        if (y >= 900)
-        {
-            dir = false;
-            colour = '#00FFFF'
-        }
-        else if (y <= 100)
-        {
-            dir = true;
-            colour = '#0000FF'
-        }
-        if (dir)
-        {
-            y += 10;
-        }
-        else
-        {
-            y -= 10;
-        }
-        }, 50);
-    </script>
-
-    
-    <script src="flappy.js"></script>
-
-
-</body>
-</html> -->
