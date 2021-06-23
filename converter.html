@@ -15,13 +15,28 @@
     <div class="form__group field">
         <label for ="input" id="input_label" class="form__label">Enter number</label> 
         <input type="text" class="form__field" id="input" label="Here" placeholder="Input" required />
+
+        <label for="auto_manual">Automatic number type detection</label>
+        <input type="checkbox" name="auto_manual" id="auto_manual" checked=true>
+        <fieldset disabled=true>
+            <legend>Manual</legend>
+            <input type="radio" name="type_select" id="select_dec" value="Decimal">
+            <label for="select_dec">Decimal</label>
+            <input type="radio" name="type_select" id="select_hex" value="Hex">
+            <label for="select_bin">Hex</label>
+            <input type="radio" name="type_select" id="select_bin" value="Binary">
+            <label for="select_bin">Binary</label>
+            <input type="radio" name="type_select" id="select_ascii" value="ASCII">
+            <label for="select_ascii">ASCII</label>
+        </fieldset>
+
         <br></br>
-        
-        <label for ="hex_box" class="form__label">Hex</label> 
-        <input type="text" class="form__field" id="hex_box" placeholder="Hex">
         
         <label for ="dec_box" class="form__label">Decimal</label> 
         <input type="text" class="form__field" id="dec_box" placeholder="Dec">
+        
+        <label for ="hex_box" class="form__label">Hex</label> 
+        <input type="text" class="form__field" id="hex_box" placeholder="Hex">
         
         <label for ="bin_box" class="form__label">Binary</label> 
         <input type="text" class="form__field" id="bin_box" placeholder="Bin">
