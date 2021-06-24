@@ -126,35 +126,3 @@ class NumberRep {
     }
 }
 
-document.getElementById("input").addEventListener("input", function(e)
-{
-    console.log("Input number: " + e.target.value);
-
-    if (e.target.value != "")
-    {             
-        var number = new NumberRep();
-        
-        number.parse(e.target.value);
-        
-        label_val = "Auto-detected: " + number.getType();
-        hex_val = number.toHex();
-        dec_val = number.toDec();
-        bin_val = number.toBin();
-        ascii_val = number.toASCII();
-    }
-    else
-    {
-        label_val = "Enter number";
-        hex_val = "Hex";
-        dec_val = "Dec";
-        bin_val = "Bin";
-        ascii_val = "";
-    }
-
-    document.getElementById("input_label").innerHTML = label_val;
-    document.getElementById("hex_box").placeholder = hex_val;
-    document.getElementById("dec_box").placeholder = dec_val;
-    document.getElementById("bin_box").placeholder = bin_val;
-    document.getElementById("ascii_box").placeholder = ascii_val;
-
-})
