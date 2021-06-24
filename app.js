@@ -1,14 +1,26 @@
 var auto_number_detection = true;
+var manual_entry = ""
 
 
 // on data entered into the 'Input' box
 document.getElementById("input").addEventListener("input", function(e) {
-    console.log("Input number: " + e.target.value);
+    parse_input(e.target.value);
+})
 
-    if (e.target.value != "") {             
+function parse_input(num_str) {
+    console.log("Input number: " + num_str + " (auto?: " + auto_number_detection + ")");
+
+    if (num_str != "") {             
         var number = new NumberRep();
         
-        number.parse(e.target.value);
+        if (auto_number_detection == true)
+        {
+            number.parse(num_str);
+        }
+        else
+        {
+            number.parse_manual(num_str, manual_entry);
+        }
         
         label_val = "Auto-detected: " + number.getType();
         hex_val = number.toHex();
@@ -30,14 +42,15 @@ document.getElementById("input").addEventListener("input", function(e) {
     document.getElementById("dec_box").placeholder = dec_val;
     document.getElementById("bin_box").placeholder = bin_val;
     document.getElementById("ascii_box").placeholder = ascii_val;
-})
+}
 
 // on auto/manual checkbox toggle
-document.getElementById("auto_manual").addEventListener("input", function(e) {
+document.getElementById("auto_manual").addEventListener("change", function(e) {
     if (document.getElementById("auto_manual").checked) {
         console.log("checked");
         document.getElementById("manual_buttons").disabled = true;
         auto_number_detection = true;
+        parse_input(document.getElementById("input").value);
     }
     else {
         document.getElementById("manual_buttons").disabled = false;
@@ -45,6 +58,22 @@ document.getElementById("auto_manual").addEventListener("input", function(e) {
         auto_number_detection = false;
     }
 })
+
+// document.getElementsByName("type_select").addEventListener("input", function(e){
+//     console.log("Radio btn");
+//     console.log(e);
+// })
+
+if (document.querySelector('input[name="type_select"]')) {
+    document.querySelectorAll('input[name="type_select"]').forEach((elem) => {
+        elem.addEventListener("change", function(event) {
+        manual_entry = event.target.value;
+        console.log(manual_entry);
+
+        parse_input(document.getElementById("input").value);
+      });
+    });
+  }
 
 // set one of the 'manual number representation' radio buttons to checked
 function set_radio_btn(number_format) {

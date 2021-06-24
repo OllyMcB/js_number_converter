@@ -90,7 +90,7 @@ class NumberRep {
             this.hex_converter,
             this.ascii_converter];
 
-        console.log("Parsing value: " + num_str);
+        console.log("(Auto) Parsing value: " + num_str);
 
         for(let conv of converters)
         {
@@ -102,6 +102,31 @@ class NumberRep {
                 this.dec = conv.to_dec(num_str);
                 break;
             }
+        }
+    }
+
+    parse_manual(num_str, manual_num_type)
+    {
+        console.log("(Manual) Parsing value: " + num_str);
+
+        switch (manual_num_type)
+        {
+            case "Decimal":
+                this.type = this.dec_converter;
+                this.dec =  this.type.to_dec(num_str);
+                break;
+            case "Hex":
+                this.type = this.hex_converter;
+                this.dec =  this.type.to_dec(num_str);
+                break;
+            case "Binary":
+                this.type = this.bin_converter;
+                this.dec =  this.type.to_dec(num_str);
+                break;
+            case "ASCII":
+                this.type = this.ascii_converter;
+                this.dec =  this.type.to_dec(num_str);
+                break;
         }
     }
 
