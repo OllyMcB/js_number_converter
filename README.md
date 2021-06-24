@@ -32,3 +32,6 @@
   - Add/remove prefix (e.g. '0x', 'b')
 - If a word is entered into ASCII, decode each char
 - Hovering over the question mark explains how to use
+
+# Input Parsing
+Iterate over the input string, splitting up each 'word' as a separate array item.
