@@ -11,3 +11,4 @@
     1. "0xFF - 0x01" (subtraction)
     2. "4096 & 0xFFFF" (bitwise and)
     3. "19 | 0111001" (bitwise or)
+    4. "4 % 2" (modulo)
