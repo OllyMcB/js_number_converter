@@ -43,8 +43,9 @@ Iterate over the input string, splitting up each 'word' as a separate array item
 5. If operand detected, perform maths and calculate answer
 6. Using the 'dec' array, create the output strings for each number type (i.e. convert dec ot hex)
 
-### Optimisation Ideas
+### Optimisation/Improvement Ideas
 - When parsing, store a copy of the full string. Upon next request to parse (e.g. upon next 'input' event), compare the new string with the previously stored string. If they are similar, then we may only have to parse the bit that changed, rather than the full string again.
+- If a space separator is not used between 'number words' & operands, the parser should still work (i.e. it should detect a number word followed by an operand)
 
 ## Name Ideas
 - Num Tool
