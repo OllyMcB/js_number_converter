@@ -1,46 +1,51 @@
-var input_str = "0x01 + 0x1A / 0xFF & 96";
-
-var word_match_patt = /(\w|\+|\-|\||\&|\/|\*)+/g;
-
-var res = input_str.match(word_match_patt);
+var input_str = "0x01 + 0x1A * 0xFF - 96";
+var input_str = "0x1A";
 
 
-console.log(res);
+// calculate the answer and add to the string
+var input_str_w_answer = input_str + " = " + eval(input_str);
 
-var input_arr = [];
+// make copies of the input + answer string for each of the number types
+var dec_str = input_str_w_answer;
+var hex_str = input_str_w_answer;
 
+// get matches of numbers from input string
+var res = input_str_w_answer.match(/(\w)+/g);
+
+// iterate though all matched words from input_str (number/operand)
 for (word_str of res)
 {
+    /* Determine if the word is an operand, or detect the number 
+    type (e.g. hex, dec). Then convert the number to it's decimal 
+    equivalent */
     if (isOperand(word_str))
     {
-        word_type = "operand";
-        dec_val = -1;//NaN;
+        console.log(word_str + " is operand");
     }
     else if (isHex(word_str))
     {
-        word_type = "hex";
-        dec_val = parseInt(word_str, 16);
+        console.log(word_str + " is hex");
+        
+        // replace the hex number with the dec equivalent in the dec string
+        dec_str = dec_str.replace(word_str, parseInt(word_str, 16).toString());   
     }
     else if (isDec(word_str))
     {
-        word_type = "decimal";
-        dec_val = parseInt(word_str);
-    }
-    else
-    {
-        word_type = "unknown";
-        dec_val = -1;//NaN;
-    }
-    // console.log("raw: '" + word_str + "'\ttype: " + word_type);
+        console.log(word_str + " is dec");
 
-    input_arr.push( { word: i, type: word_type, as_dec: toString(dec_val) });
+        // replace the dec number with the hex equivalent in the hex string
+        hex_str = hex_str.replace(word_str, "0x" + Number(word_str).toString(16).toUpperCase()); 
+    }
 }
 
-console.log("input_array length: " + input_arr.length)
-for (i in input_arr)
-{
-    console.log(JSON.stringify(input_arr[i]))
-}
+var answer = eval(input_str);
+console.log("Input Str: " + input_str + "\tAnswer: " + answer);
+
+console.log("Dec str: " + dec_str);
+console.log("Hex str: " + hex_str);
+
+
+
 
 /* Return true if the input_word is an operand */
 function isOperand(input_word) {
