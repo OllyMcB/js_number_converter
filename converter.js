@@ -1,13 +1,25 @@
-function convert(input_str) {
-    // calculate the answer and add to the string
-    var input_str_w_answer = input_str + " = " + eval(input_str);
 
-    // make copies of the input + answer string for each of the number types
-    var dec_str = input_str_w_answer;
-    var hex_str = input_str_w_answer;
+/* Convert an input string into their hex & dec equivalents, whilst also performing
+any mathematical operations */
+function convert(input_str) {
+    // if an operand exists, then we need to calculate the answer
+    if (input_str.search(/[\+\-\*\\\|\&\^\=]/) != -1)
+    {
+        // calculate the answer
+        var answer = eval(input_str);       // TODO, sanitise input
+        // var answer = Function(input_str);       // TODO, sanitise input
+        if (answer != undefined)
+        {
+            input_str += " = " + answer;
+        }
+    }
+
+    // make copies of the input string for each of the number types
+    var dec_str = input_str;
+    var hex_str = input_str;
 
     // get matches of numbers from input string
-    var res = input_str_w_answer.match(/(\w)+/g);
+    var res = input_str.match(/(\w)+/g);
 
     // iterate though all matched words from input_str (number/operand)
     for (word_str of res)
@@ -16,9 +28,12 @@ function convert(input_str) {
         if (isHex(word_str))
         {
             console.log(word_str + " is hex");
+
+            // TODO, calling replace multiple times will mean that any previously replaced
+            // chars may also get replaced
             
             // replace the hex number with the dec equivalent in the dec string
-            dec_str = dec_str.replace(word_str, parseInt(word_str, 16).toString());   
+            dec_str = dec_str.replace(word_str, hexToDec(word_str));   
         }
         else if (isDec(word_str))
         {
@@ -28,12 +43,12 @@ function convert(input_str) {
             hex_str = hex_str.replace(word_str, decToHex(word_str)); 
         }
     }
-
-    var answer = eval(input_str);
-    console.log("Input Str: " + input_str + "\tAnswer: " + answer);
+    
 
     console.log("Dec str: " + dec_str);
     console.log("Hex str: " + hex_str);
+
+    return [ dec_str, hex_str ];
 }
 
 /* Return true if the input_word is a hex number */
@@ -45,17 +60,37 @@ function isHex(input_word) {
 function isDec(input_word) {
     return input_word.search(/^[0-9]+$/) != -1;
 }
+ 
 
 /* Convert a decimal number to it's hex equivalent */
 function decToHex(dec_str) {
-    return "0x" + Number(dec_str).toString(16).toUpperCase();
+    // handle leading zeros
+    var leading_zeros = 2;
+    d =parseInt(dec_str);
+    if (d > 0xFFFFFFFF)
+    {
+        leading_zeros = 16;
+    }
+    else if (d > 0xFFFF)
+    {
+        leading_zeros = 8;
+    }
+    else if (d > 0xFF)
+    {
+        leading_zeros = 4;
+    }
+    return "0x" + Number(dec_str).toString(16).padStart(leading_zeros, '0').toUpperCase();
+}
+
+/**< Convert a hex number to it's dec equivalent */
+function hexToDec(hex_str) {
+    return parseInt(hex_str, 16).toString();
 }
 
 
 
 
-
-
+// convert("0x0001 - 12 * 0x31");
 
 
 
