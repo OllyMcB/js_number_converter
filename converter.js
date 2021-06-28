@@ -1,16 +1,58 @@
-var input_str = "0x1A + 0XFF - 0x00";
+function convert(input_str) {
+    // calculate the answer and add to the string
+    var input_str_w_answer = input_str + " = " + eval(input_str);
 
-// match a word or operand
-var word_match_pattern = /([\w|\+|\-|\*|\&|\|]+)/ig;
+    // make copies of the input + answer string for each of the number types
+    var dec_str = input_str_w_answer;
+    var hex_str = input_str_w_answer;
 
-var res = input_str.match(word_match_pattern);
+    // get matches of numbers from input string
+    var res = input_str_w_answer.match(/(\w)+/g);
 
-console.log(res);
+    // iterate though all matched words from input_str (number/operand)
+    for (word_str of res)
+    {
+        // determine the number type of each match (e.g. hex, dec)
+        if (isHex(word_str))
+        {
+            console.log(word_str + " is hex");
+            
+            // replace the hex number with the dec equivalent in the dec string
+            dec_str = dec_str.replace(word_str, parseInt(word_str, 16).toString());   
+        }
+        else if (isDec(word_str))
+        {
+            console.log(word_str + " is dec");
 
-for (i of res)
-{
-    console.log(i);
+            // replace the dec number with the hex equivalent in the hex string
+            hex_str = hex_str.replace(word_str, decToHex(word_str)); 
+        }
+    }
+
+    var answer = eval(input_str);
+    console.log("Input Str: " + input_str + "\tAnswer: " + answer);
+
+    console.log("Dec str: " + dec_str);
+    console.log("Hex str: " + hex_str);
 }
+
+/* Return true if the input_word is a hex number */
+function isHex(input_word) {
+    return input_word.search(/^0x[0-9a-f]+$/i) != -1;
+}
+
+/* Return true if the input_word is a decimal number */
+function isDec(input_word) {
+    return input_word.search(/^[0-9]+$/) != -1;
+}
+
+/* Convert a decimal number to it's hex equivalent */
+function decToHex(dec_str) {
+    return "0x" + Number(dec_str).toString(16).toUpperCase();
+}
+
+
+
 
 
 
