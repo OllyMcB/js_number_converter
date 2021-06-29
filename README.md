@@ -50,6 +50,7 @@ Iterate over the input string, splitting up each 'word' as a separate array item
 ## Name Ideas
 - Num Tool
 - Number Converter
+- Num Rep (Number Representation)
 
 ## Plan
 1. Get input parsing & maths working with just dec & hex
