@@ -1,30 +1,132 @@
 
+/*
+* The fromDec converter converts numbers from a decimal number to each of
+* the other number representations.
+*
+* The fromLazy class inherits from the fromDec class and allows all child 
+* classes to simply implement a toDec() method. Where the fromLazy class then
+* converts from dec to the other number representations using the fromDec class.
+*
+*/
+
+class fromDec // extends converter
+{
+    constructor()
+    {
+    }
+
+    name() {
+        return "Decimal";
+    }
+
+    /* Return true if the input_word is a decimal number */
+    isThisType(num) {
+        return num.search(/^[0-9]+$/) != -1;
+    }
+
+    toDec(num) {
+        return num;
+    }
+
+    toHex(num) {
+        return "0x" + Number(num).toString(16).toUpperCase();
+    }
+
+    toBin(num) {
+        return Number(num).toString(2).toUpperCase();
+    }
+
+    toASCII(num) {
+        return String.fromCharCode(num);
+    }
+}
+
+class fromLazy extends fromDec
+{
+    toHex(num) {
+        return super.toHex(this.toDec(num));
+    }
+    
+    toBin(num) {
+        return super.toBin(this.toDec(num));
+    }
+    
+    toASCII(num) {
+        return super.toASCII(this.toDec(num));
+    }
+}
+
+class fromHex extends fromLazy
+{
+    name() {
+        return "Hex";
+    }
+
+    /* Return true if the input_word is a hex number */
+    isThisType(num) {
+        return num.search(/^0x[0-9a-f]+$/i) != -1;
+    }
+    
+    toDec(num) {
+        return parseInt(hex_str, 16).toString();
+    }
+}
+
+class fromBin extends fromLazy
+{
+    name() {
+        return "Binary";
+    }
+
+    /* Return true if the input_word is a binary number */
+    isThisType(num) {
+        return num.search(/^[01]+$/i) != -1;
+    }
+    
+    toDec(num) {
+        return parseInt(num, 2).toString();
+    }
+}
+
+
+class fromASCII extends fromLazy
+{
+    name() {
+        return "ASCII";
+    }
+
+    /* Return true if the input_word is a binary number */
+    isThisType(num) {
+        return num.search(/^[\w]+$/i) != -1;
+    }
+    
+    toDec(num) {
+        return num.charCodeAt(0);
+    }
+}
+
+
+
+
+converters = {
+    dec: new fromDec(),
+    hex: new fromHex(),
+    bin: new fromBin(),
+    ascii: new fromASCII()
+}
+
+
+// convert("19  - 12", "dec");
+convert("11", "bin");
+
+
+
 /* Convert an input string into their hex & dec equivalents, whilst also performing
 any mathematical operations */
-function convert(input_str) {
+function convert(input_str, origin_number_type) {
     let result = { dec: {}, hex: {}, bin: {}, ascii: {} };
 
     console.log("input_str: '" + input_str + "'");
-    // if an operand exists, then we need to calculate the answer
-    if (input_str.search(/[\+\-\*\/\|\&\^\=]/) != -1)
-    {
-        // calculate the answer
-        try {
-            var answer = eval(input_str);       // TODO, sanitise input
-            // var answer = Function(input_str);// TODO, sanitise input
-            if (answer != undefined)
-            {
-                result.dec.answer = answer;
-                result.hex.answer = decToHex(answer);
-                result.bin.answer = decToBin(answer);
-                result.ascii.answer = decToASCII(answer);
-            }
-        }
-        catch (err)
-        {
-            console.log("Calculation error. Possibly due to incomplete equation");
-        }
-    }
 
     result.dec.field_str = "";
     result.hex.field_str = "";
@@ -36,51 +138,51 @@ function convert(input_str) {
     console.log("res: '" + res.toString() + "'");
 
     // iterate though all matched words from input_str (number/operand)
-    for (word_str of res)
+    for (let word_str of res)
     {
         let dec_word = "";
         let hex_word = "";
         let bin_word = "";
         let ascii_word = "";
 
-        // determine the number type of each match (e.g. hex, dec)
-        if (isHex(word_str))
+        var detected = false;
+
+        
+        let conv = converters[origin_number_type];
+        console.log("origin_number_type: " + origin_number_type);
+        if (conv.isThisType(word_str))
         {
-            console.log(" - " + word_str + " is hex");
-            
-            dec_word = hexToDec(word_str);   
-            hex_word = word_str;
-            bin_word = hexToBin(word_str);
-            ascii_word = hexToASCII(word_str);
+            console.log(" - " + word_str + " is manually set to " + conv.name());
+
+            dec_word = conv.toDec(word_str);   
+            hex_word = conv.toHex(word_str);
+            bin_word = conv.toBin(word_str);
+            ascii_word = conv.toASCII(word_str);
+
+            detected = true;
         }
-        else if (isDec(word_str))
+
+        if (!detected)
         {
-            console.log(" - " + word_str + " is dec");
-            
-            dec_word = word_str;
-            hex_word = decToHex(word_str); 
-            bin_word = decToBin(word_str);
-            ascii_word = decToASCII(word_str);
+            for (conv_types in converters)
+            {
+                let conv = converters[conv_types];
+                if (conv.isThisType(word_str))
+                {
+                    console.log(" - " + word_str + " is " + conv.name());
+                    
+                    dec_word = conv.toDec(word_str);   
+                    hex_word = conv.toHex(word_str);
+                    bin_word = conv.toBin(word_str);
+                    ascii_word = conv.toASCII(word_str);
+                    
+                    detected = true;
+                    break;      // TODO, ensure this breaks out of the for loop
+                }
+            }
         }
-        else if (isBin(word_str))
-        {
-            console.log(" - " + word_str + " is bin");
-            
-            dec_word = binToDec(word_str);
-            hex_word = binToHex(word_str); 
-            bin_word = word_str;
-            ascii_word = binToASCII(word_str);
-        }
-        else if (isASCII(word_str))
-        {
-            console.log(" - " + word_str + " is ascii");
-            
-            dec_word = ASCIIToDec(word_str);
-            hex_word = ASCIIToHex(word_str); 
-            bin_word = ASCIIToBin(word_str);
-            ascii_word = word_str;
-        }
-        else
+
+        if (!detected)
         {
             console.log(" - " + word_str + " is not known");
 
@@ -107,107 +209,33 @@ function convert(input_str) {
     console.log("Bin str: " + result.bin.field_str);
     console.log("ASCII str: " + result.ascii.field_str);
 
+    // if an operand exists, then we need to calculate the answer
+    if (input_str.search(/[\+\-\*\/\|\&\^\=]/) != -1)
+    {
+        // calculate the answer
+        try {
+            var answer = eval(input_str);       // TODO, sanitise input
+            // var answer = Function(input_str);// TODO, sanitise input
+            if (answer != undefined)
+            {
+                result.dec.answer = answer;
+                result.hex.answer = converters["dec"].toHex(answer);
+                result.bin.answer = converters["dec"].toBin(answer);
+                result.ascii.answer = converters["dec"].toASCII(answer);
+            }
+        }
+        catch (err)
+        {
+            console.log("Calculation error. Possibly due to incomplete equation");
+        }
+    }
+    else
+    {
+        result.dec.answer = "";
+        result.hex.answer = "";
+        result.bin.answer = "";
+        result.ascii.answer = "";
+    }
+
     return result;
-}
-
-/* Return true if the input_word is a hex number */
-function isHex(input_word) {
-    return input_word.search(/^0x[0-9a-f]+$/i) != -1;
-}
-
-/* Return true if the input_word is a decimal number */
-function isDec(input_word) {
-    return input_word.search(/^[0-9]+$/) != -1;
-}
-
-/* Return true if the input_word is a binary number */
-function isBin(input_word) {
-    return input_word.search(/^0x[01]+$/i) != -1;
-}
-
-/* Return true if the input_word is ASCII */
-function isASCII(input_word) {
-    return input_word.search(/^[\w]+$/i) != -1;
-}
- 
-
-/* Convert a decimal number to it's hex equivalent */
-function decToHex(dec_str) {
-    const leading_zeros = nLeadingZeros(dec_str);
-    return "0x" + Number(dec_str).toString(16).padStart(leading_zeros, '0').toUpperCase();
-}
-
-/* Convert a decimal number to it's binary equivalent */
-function decToBin(dec_str) {
-    const leading_zeros = nLeadingZeros(dec_str);
-    return Number(dec_str).toString(2).padStart(leading_zeros, '0').toUpperCase();
-}
-
-/* Convert a decimal number to it's ASCII equivalent */
-function decToASCII(dec_str) {
-    return String.fromCharCode(dec_str);
-}
-
-/* Convert a hex number to it's dec equivalent */
-function hexToDec(hex_str) {
-    return parseInt(hex_str, 16).toString();
-}
-
-/* Convert a hex number to it's binary equivalent */
-function hexToBin(hex_str) {
-    return decToBin(hexToDec(hex_str));
-}
-
-/* Convert a hex number to it's ASCII equivalent */
-function hexToASCII(hex_str) {
-    return decToASCII(hexToDec(hex_str));
-}
-
-/* Convert a binary number to it's dec equivalent */
-function binToDec(bin_str) {
-    return parseInt(bin_str, 2);
-}
-
-/* Convert a binary number to it's hex equivalent */
-function binToHex(bin_str) {
-    return decToHex(binToDec(bin_str));
-}
-
-/* Convert a binary number to it's ASCII equivalent */
-function binToASCII(bin_str) {
-    return decToASCII(binToDec(bin_str));
-}
-
-/* Convert a ASCII char to it's dec equivalent */
-function ASCIIToDec(ascii_str) {
-    return ascii_str.charCodeAt(0);
-}
-
-/* Convert a ASCII char to it's hex equivalent */
-function ASCIIToHex(ascii_str) {
-    return decToHex(ASCIIToDec(ascii_str));
-}
-
-/* Convert a ASCII char to it's binary equivalent */
-function ASCIIToBin(ascii_str) {
-    return decToBin(ASCIIToDec(ascii_str));
-}
-
-/* Calculate the number of leading zeros required */
-function nLeadingZeros(num_str) {
-    var leading_zeros = 2;
-    d = parseInt(num_str);
-    if (d > 0xFFFFFFFF)
-    {
-        leading_zeros = 16;
-    }
-    else if (d > 0xFFFF)
-    {
-        leading_zeros = 8;
-    }
-    else if (d > 0xFF)
-    {
-        leading_zeros = 4;
-    }
-    return leading_zeros;
 }

@@ -1,5 +1,5 @@
 
-function convertAndShow(input_str) {
+function convertAndShow(input_str, origin_number_type) {
     let dec_str = "";
     let dec_answer = "";
     let hex_str = "";
@@ -7,7 +7,7 @@ function convertAndShow(input_str) {
 
     if (input_str != "")
     {
-        var res = convert(input_str);
+        var res = convert(input_str, origin_number_type);
 
         console.log(res);
         console.log(" * res: " + res.toString());
@@ -67,17 +67,17 @@ function clearAllFields() {
 }
 
 document.getElementById("dec_field").addEventListener("input", function(e) {
-    convertAndShow(e.target.value);
+    convertAndShow(e.target.value, "dec");
 })
 
 document.getElementById("hex_field").addEventListener("input", function(e) {
-    convertAndShow(e.target.value);
+    convertAndShow(e.target.value, "hex");
 })
 
 document.getElementById("bin_field").addEventListener("input", function(e) {
-    convertAndShow(e.target.value);
+    convertAndShow(e.target.value, "bin");
 })
 
 document.getElementById("ascii_field").addEventListener("input", function(e) {
-    convertAndShow(e.target.value);
+    convertAndShow(e.target.value, "ascii");
 })
