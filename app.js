@@ -1,10 +1,5 @@
 
 function convertAndShow(input_str, origin_number_type) {
-    let dec_str = "";
-    let dec_answer = "";
-    let hex_str = "";
-    let hex_answer = "";
-
     if (input_str != "")
     {
         var res = convert(input_str, origin_number_type);
@@ -67,17 +62,27 @@ function clearAllFields() {
 }
 
 document.getElementById("dec_field").addEventListener("input", function(e) {
-    convertAndShow(e.target.value, "dec");
+    
+    // console.log(e);
+
+    // if (e.inputType == "insertText")
+    // {
+        convertAndShow(e.target.value, "dec");
+        // convertAndShow(e.data, "dec");
+    // }    
 })
 
 document.getElementById("hex_field").addEventListener("input", function(e) {
     convertAndShow(e.target.value, "hex");
+    // convertAndShow(e.data, "hex");
 })
 
 document.getElementById("bin_field").addEventListener("input", function(e) {
     convertAndShow(e.target.value, "bin");
+    // convertAndShow(e.data, "bin");
 })
 
 document.getElementById("ascii_field").addEventListener("input", function(e) {
     convertAndShow(e.target.value, "ascii");
+    // convertAndShow(e.data, "ascii");
 })
