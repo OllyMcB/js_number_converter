@@ -68,7 +68,7 @@ class fromHex extends fromLazy
     }
     
     toDec(num) {
-        return parseInt(hex_str, 16).toString();
+        return parseInt(num, 16).toString();
     }
 }
 
@@ -98,6 +98,7 @@ class fromASCII extends fromLazy
     /* Return true if the input_word is a binary number */
     isThisType(num) {
         return num.search(/^[\w]+$/i) != -1;
+        // return num.search(/^\b(?!0x\b)\w+\b$/i) != -1;        // ignore '0x'
     }
     
     toDec(num) {
@@ -117,7 +118,7 @@ converters = {
 
 
 // convert("19  - 12", "dec");
-convert("11", "bin");
+// convert("11 - ", "bin");
 
 
 
@@ -196,11 +197,6 @@ function convert(input_str, origin_number_type) {
         result.hex.field_str += hex_word;
         result.bin.field_str += bin_word;
         result.ascii.field_str += ascii_word;
-
-        // console.log("dec_str: '" + result.dec.field_str + "'");
-        // console.log("hex_str: '" + result.hex.field_str + "'");
-        // console.log("bin_str: '" + result.bin.field_str + "'");
-        // console.log("ascii_str: '" + result.ascii.field_str + "'");
     }
     
 
@@ -210,15 +206,15 @@ function convert(input_str, origin_number_type) {
     console.log("ASCII str: " + result.ascii.field_str);
 
     // if an operand exists, then we need to calculate the answer
-    if (input_str.search(/[\+\-\*\/\|\&\^\=]/) != -1)
+    if (result.dec.field_str.search(/[\+\-\*\/\|\&\^\=]/) != -1)
     {
         // calculate the answer
         try {
-            var answer = eval(input_str);       // TODO, sanitise input
-            // var answer = Function(input_str);// TODO, sanitise input
+            var answer = eval(result.dec.field_str);       // TODO, sanitise input
+            // var answer = Function(result.dec.field_str);// TODO, sanitise input
             if (answer != undefined)
             {
-                result.dec.answer = answer;
+                result.dec.answer = answer.toString();
                 result.hex.answer = converters["dec"].toHex(answer);
                 result.bin.answer = converters["dec"].toBin(answer);
                 result.ascii.answer = converters["dec"].toASCII(answer);
@@ -227,6 +223,10 @@ function convert(input_str, origin_number_type) {
         catch (err)
         {
             console.log("Calculation error. Possibly due to incomplete equation");
+            result.dec.answer = "";
+            result.hex.answer = "";
+            result.bin.answer = "";
+            result.ascii.answer = "";
         }
     }
     else
