@@ -26,7 +26,7 @@
   - Allow math between different number types (e.g. 123 & 0x0F)
   - Right-justify answer
 - Gear 'settings' icon next to each field
-  - Group numbers (e.g. 4, 8, 16)
+  - Group numbers (e.g. 4, 8, 16) / Representation (e.g. 8-bit, 16-bit, 32-bit)
   - Spacing between groups
   - Upper/lowercase
   - Add/remove prefix (e.g. '0x', 'b')
