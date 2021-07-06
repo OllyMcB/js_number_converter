@@ -44,3 +44,10 @@
 - Num Tool
 - Number Converter
 - Num Rep (Number Representation)
+
+## Layout Concept
+- Need to add rounded corners to field
+- Add a (?) button below the fields to allow a user to hover for help
+- Add a (x) button below the fields to clear entries
+- Maybe use a single gear below the fields
+![concept](layout_concept.jpeg)
