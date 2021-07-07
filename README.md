@@ -50,4 +50,4 @@
 - Add a (?) button below the fields to allow a user to hover for help
 - Add a (x) button below the fields to clear entries
 - Maybe use a single gear below the fields
-![concept](layout_concept.jpeg)
+![concept](images/layout_concept.jpeg)
