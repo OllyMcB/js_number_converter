@@ -3,3 +3,63 @@ body {
   margin: auto;
   text-align: center;
 }
+
+.flexbox-columns {
+  background-color: yellow;
+}
+
+
+/* .form_field {
+  background: grey;
+}
+
+.field_labels {
+  color: rgb(248, 8, 8);
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+} */
+
+.flexbox-columns {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  /* flex-direction: row; */
+}
+
+.column-left {
+  min-width: 50px;
+  background-color: #eb872a;
+  border: 1px solid rgb(241, 6, 6);
+}
+
+.column-mid {
+  min-width: 50px;
+  background-color: #2aeb3a;
+  border: 1px solid rgb(4, 119, 13);
+  /* flex-direction: column; */
+}
+
+.column-right {
+  min-width: 50px;
+  background-color: #66a2f0;
+  border: 1px solid rgb(77, 6, 241);
+}
+
+.flexbox-item {
+  min-width: 50px;
+  min-height: 25px;
+  margin: 20px;
+  border: 1px solid #333;
+  background-color: #dfdfdf;
+}
+
+/* .flexbox-item-1 {
+  min-height: 100px;
+}
+
+.flexbox-item-2 {
+  min-height: 200px;
+}
+
+.flexbox-item-3 {
+  min-height: 300px;
+} */
