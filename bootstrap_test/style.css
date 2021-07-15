@@ -1,0 +1,42 @@
+
+/* .element_container
+{
+    width: 400px;
+}
+
+.top_container
+{
+    background-color: gray;
+}
+
+.bottom_container
+{
+    background-color: hotpink;
+}
+
+input[type=text]
+{
+    background-color: transparent;
+    border: none;
+} 
+
+.container
+{
+    width: 400px;
+}*/
+
+.top_container
+{
+    background-color: #e6e6e6;
+}
+
+.bottom_container
+{
+    background-color: hotpink;
+} 
+
+input[type=text]
+{
+    background-color: transparent;
+    border: none;
+}

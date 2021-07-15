@@ -1,0 +1,69 @@
+/* Import font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+
+/* Set margin on body to 0 - to see effect of doing this comment it out and compare - and default font behaviour */
+body {
+	margin: 0;
+
+	font-family: 'Roboto', sans-serif;
+	font-weight: 300;
+	font-size: 20px;
+}
+
+
+/* Set outer container to width and height of device */
+.container-page {
+	height: 100vh;
+	width: 100vw;
+
+	/*border: black solid 2px;*/
+}
+
+/* Position calculator in centre of outer container and set to 50% width of outer container */
+.container-calculator {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 50%;
+
+	/*border: blue solid 2px;*/
+}
+
+/* Set size of individual calculation containers to 100% of calculator container and set margin to give gap between elements */
+.container-calculations {
+	width: 100%;
+	box-sizing: border-box;
+
+	margin-bottom: 1em;
+
+	box-shadow: #ddd 2px 2px;
+
+	display: flex;
+	flex-direction: column;
+
+	/*border: red solid 2px;*/
+}
+
+/* Set behaviour of individual rows to flex */
+.calculations-top, .calculations-bottom {
+	display: flex;
+}
+
+/* Set colour of top row to grey */
+.calculations-top {
+	background-color: #bbb;
+}
+
+/* Set width of each text element to 50% to split in to 2 columns */
+.calculations-text {
+	width: 50%;
+	padding: 0.5em;
+
+	/*border: lime solid 1px;*/
+}
+
+/* Align relevant text to the right of the column */
+.calculations-text-right {
+	text-align: right;
+}
