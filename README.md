@@ -51,3 +51,6 @@
 - Add a (x) button below the fields to clear entries
 - Maybe use a single gear below the fields
 ![concept](images/layout_concept.jpeg)
+
+## TODO
+- Add Zoe Thexton as a contributor
