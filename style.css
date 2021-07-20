@@ -1,5 +1,92 @@
+/* Import font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+
+/* Set margin on body to 0 - to see effect of doing this comment it out and compare - and default font behaviour */
 body {
-  background-color: rgb(39, 134, 149, 0.9);
-  margin: auto;
-  text-align: center;
+	margin: 0;
+
+	font-family: 'Roboto', sans-serif;
+	font-weight: 300;
+	font-size: 20px;
+}
+
+
+/* Set outer container to width and height of device */
+.container-page {
+	height: 100vh;
+	width: 100vw;
+
+	/* border: yellow solid 2px; */
+}
+
+/* Position calculator in centre of outer container and set to 50% width of outer container */
+.container-calculator {
+	position: absolute;
+	top: 40%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 35%;
+
+	/* border: blue solid 2px; */
+}
+
+/* Set size of individual calculation containers to 100% of calculator container and set margin to give gap between elements */
+.container-calculations {
+	width: 100%;
+	box-sizing: border-box;
+	/* border-radius: 25px 25px; */
+
+	margin-bottom: 1em;
+
+	/* box-shadow: rgb(124, 124, 124) 4px 4px; */
+	box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+
+	display: flex;
+	flex-direction: column;
+
+	/* border: red solid 2px; */
+
+	/* border-radius: 25px 25px 40px 40px; */
+	border-radius: 6px;
+}
+
+/* Set behaviour of individual rows to flex */
+.calculations-top, .calculations-bottom {
+	display: flex;
+
+	
+}
+
+/* Set colour of top row to grey */
+.calculations-top {
+	background-color: rgba(187, 187, 187, 0.527);
+	/* background-color: #e95add83; */
+	
+	border-radius: 6px 6px 0px 0px;
+}
+
+.calculations-bottom {
+	/* background-color: #5ae991; */
+	/* border-radius: 0px 0px 5px 5px; */
+	border-radius: 0px 0px 6px 6px;
+}
+
+/* Set width of each text element to 50% to split in to 2 columns */
+.calculations-text {
+	width: 50%;
+	padding: 0.5em;
+
+	/* font-family: 'Roboto', sans-serif; */
+	
+	
+	/*border: lime solid 1px;*/
+}
+
+/* Align relevant text to the right of the column */
+.calculations-text-right {
+	text-align: right;
+}
+
+.calculations-input, .calculations-answer {
+	border: none;
 }

@@ -163,25 +163,25 @@ function convert(input_str, origin_number_type) {
             detected = true;
         }
 
-        if (!detected)
-        {
-            for (conv_types in converters)
-            {
-                let conv = converters[conv_types];
-                if (conv.isThisType(word_str))
-                {
-                    console.log(" - " + word_str + " is " + conv.name());
+        // if (!detected)
+        // {
+        //     for (conv_types in converters)
+        //     {
+        //         let conv = converters[conv_types];
+        //         if (conv.isThisType(word_str))
+        //         {
+        //             console.log(" - " + word_str + " is " + conv.name());
                     
-                    dec_word = conv.toDec(word_str);   
-                    hex_word = conv.toHex(word_str);
-                    bin_word = conv.toBin(word_str);
-                    ascii_word = conv.toASCII(word_str);
+        //             dec_word = conv.toDec(word_str);   
+        //             hex_word = conv.toHex(word_str);
+        //             bin_word = conv.toBin(word_str);
+        //             ascii_word = conv.toASCII(word_str);
                     
-                    detected = true;
-                    break;      // TODO, ensure this breaks out of the for loop
-                }
-            }
-        }
+        //             detected = true;
+        //             break;      // TODO, ensure this breaks out of the for loop
+        //         }
+        //     }
+        // }
 
         if (!detected)
         {
