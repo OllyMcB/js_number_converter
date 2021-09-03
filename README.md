@@ -30,9 +30,11 @@
   - Spacing between groups
   - Upper/lowercase
   - Add/remove prefix (e.g. '0x', 'b')
+  - Enable/disable 'colour highlight on hover'
 - If a word is entered into ASCII, decode each char
 - Hovering over the question mark (?) explains how to use
 - Clicking the (X) will clear the fields
+- If you hover over a single character within a word/number, then that section of the word/number will be highligthed in each of the other fields. For example, hovering over the '2' in the word '0x12' will result in the right 4 digits of '001**0010**' change colour. The intention is that it makes it easier to understand the composition of larger numbers.
 
 
 ## Optimisation/Improvement Ideas
