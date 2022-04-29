@@ -30,6 +30,7 @@
   - Spacing between groups
   - Upper/lowercase
   - Add/remove prefix (e.g. '0x', 'b')
+  - Endianness
 - If a word is entered into ASCII, decode each char
 - Hovering over the question mark (?) explains how to use
 - Clicking the (X) will clear the fields
@@ -39,6 +40,10 @@
 - When parsing, store a copy of the full string. Upon next request to parse (e.g. upon next 'input' event), compare the new string with the previously stored string. If they are similar, then we may only have to parse the bit that changed, rather than the full string again.
 - If a space separator is not used between 'number words' & operands, the parser should still work (i.e. it should detect a number word followed by an operand)
 - Pressing the 'tab' key should select each field in an intuitive order
+- Hover over a character to highlight it in all representations
+  - Therefore each character should be stored as a unique object
+  - Characters should be grouped into 8-bit words (e.g. 00001111, 0F, '?', 126)
+
 
 ## Name Ideas
 - Num Tool
