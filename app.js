@@ -51,7 +51,7 @@ function clearAllFields() {
     document.getElementById("dec_field").value = "";
     document.getElementById("dec_answer").value = "";
     
-    document.getElementById("hex_field").value = "";
+    document.getElementById("hex_field").value = "0x";
     document.getElementById("hex_answer").value = "";
 
     document.getElementById("bin_field").value = "";
