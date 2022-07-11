@@ -206,7 +206,7 @@ function convert(input_str, origin_number_type) {
     console.log("ASCII str: " + result.ascii.field_str);
 
     // if an operand exists, then we need to calculate the answer
-    if (result.dec.field_str.search(/[\+\-\*\/\|\&\^\=]/) != -1)
+    if (result.dec.field_str.search(/[\+\-\*\/\|\&\^\=\%]/) != -1)
     {
         // calculate the answer
         try {
