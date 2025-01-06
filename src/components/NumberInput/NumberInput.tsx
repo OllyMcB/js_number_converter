@@ -37,11 +37,24 @@ export const NumberInput = ({
   };
 
   return (
-    <Paper elevation={0} className={styles.container}>
+    <Paper 
+      elevation={0} 
+      className={styles.container}
+      sx={{
+        bgcolor: 'background.default',
+        borderRadius: 2,
+        overflow: 'hidden'
+      }}
+    >
       <Typography
         variant="subtitle1"
         className={styles.label}
         component="div"
+        sx={{
+          bgcolor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}
       >
         {label}
       </Typography>

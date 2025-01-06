@@ -1,8 +1,21 @@
 import { useState } from 'react'
-import { Container, Paper, IconButton, Typography, Box } from '@mui/material'
+import { 
+  Container, 
+  Paper, 
+  IconButton, 
+  Typography, 
+  Box,
+  ThemeProvider,
+  CssBaseline,
+  useTheme,
+  Tooltip
+} from '@mui/material'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import SettingsIcon from '@mui/icons-material/Settings'
+import Brightness4Icon from '@mui/icons-material/Brightness4'
+import Brightness7Icon from '@mui/icons-material/Brightness7'
 import { NumberInput } from './components/NumberInput/NumberInput'
+import { lightTheme, darkTheme } from './theme'
 import './App.scss'
 
 interface NumberValues {
@@ -12,6 +25,15 @@ interface NumberValues {
   ascii: string
 }
 
+const HELP_TEXT = `
+Number Converter allows you to:
+• Convert between decimal, hexadecimal, binary, and ASCII
+• Enter multiple numbers separated by spaces
+• Use '0x' prefix for hex numbers
+• See ASCII characters for each number
+• Toggle between light and dark mode
+`;
+
 function App() {
   const [values, setValues] = useState<NumberValues>({
     decimal: '',
@@ -19,6 +41,8 @@ function App() {
     binary: '',
     ascii: ''
   })
+  const [darkMode, setDarkMode] = useState(false)
+  const theme = useTheme()
 
   const convertNumber = (num: number): NumberValues => ({
     decimal: num.toString(),
@@ -128,49 +152,90 @@ function App() {
   }
 
   return (
-    <Container maxWidth="md" className="app">
-      <Typography variant="h3" component="h1" gutterBottom align="center">
-        Number Converter
-      </Typography>
-      <Paper elevation={3} className="converter">
-        <NumberInput
-          label="Decimal"
-          value={values.decimal}
-          placeholder="Enter decimal number(s)"
-          onChange={handleDecimalChange}
-          type="decimal"
-        />
-        <NumberInput
-          label="Hex"
-          value={values.hex}
-          placeholder="Enter hex number(s)"
-          onChange={handleHexChange}
-          type="hex"
-        />
-        <NumberInput
-          label="Binary"
-          value={values.binary}
-          placeholder="Enter binary number(s)"
-          onChange={handleBinaryChange}
-          type="binary"
-        />
-        <NumberInput
-          label="ASCII"
-          value={values.ascii}
-          placeholder="Enter ASCII character(s)"
-          onChange={handleAsciiChange}
-          type="ascii"
-        />
-        <Box className="controls">
-          <IconButton className="help" size="large">
-            <HelpOutlineIcon />
-          </IconButton>
-          <IconButton size="large">
-            <SettingsIcon />
-          </IconButton>
-        </Box>
-      </Paper>
-    </Container>
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+      <CssBaseline />
+      <Box sx={{ 
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        transition: 'all 0.3s ease',
+        padding: '2rem 0'
+      }}>
+        <Container maxWidth="md" className="app">
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            gutterBottom 
+            align="center"
+            sx={{ color: 'text.primary', mb: 4 }}
+          >
+            Number Converter
+          </Typography>
+          <Paper 
+            elevation={0} 
+            className="converter"
+            sx={{ 
+              bgcolor: 'background.paper',
+              borderRadius: 3,
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            <Box sx={{ p: 3, pb: 1 }}>
+              <NumberInput
+                label="Decimal"
+                value={values.decimal}
+                placeholder="Enter decimal number(s)"
+                onChange={handleDecimalChange}
+                type="decimal"
+              />
+              <NumberInput
+                label="Hex"
+                value={values.hex}
+                placeholder="Enter hex number(s)"
+                onChange={handleHexChange}
+                type="hex"
+              />
+              <NumberInput
+                label="Binary"
+                value={values.binary}
+                placeholder="Enter binary number(s)"
+                onChange={handleBinaryChange}
+                type="binary"
+              />
+              <NumberInput
+                label="ASCII"
+                value={values.ascii}
+                placeholder="Enter ASCII character(s)"
+                onChange={handleAsciiChange}
+                type="ascii"
+              />
+            </Box>
+            <Box className="controls">
+              <Tooltip 
+                title={HELP_TEXT} 
+                arrow 
+                placement="top"
+                enterDelay={200}
+                leaveDelay={200}
+              >
+                <IconButton className="help" size="large">
+                  <HelpOutlineIcon />
+                </IconButton>
+              </Tooltip>
+              <IconButton size="large">
+                <SettingsIcon />
+              </IconButton>
+              <IconButton 
+                onClick={() => setDarkMode(!darkMode)} 
+                size="large"
+              >
+                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+              </IconButton>
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
+    </ThemeProvider>
   )
 }
 
