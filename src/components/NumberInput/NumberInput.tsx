@@ -31,7 +31,7 @@ interface CharacterProps {
 const Character = ({ char, index, isHighlighted, highlightColor, onMouseEnter, onMouseLeave }: CharacterProps) => (
   <span
     className={styles.character}
-    style={isHighlighted ? { backgroundColor: highlightColor } : undefined}
+    style={isHighlighted ? { color: highlightColor } : undefined}
     onMouseEnter={onMouseEnter}
     onMouseLeave={onMouseLeave}
   >
@@ -105,9 +105,61 @@ export const NumberInput = ({
         if (type === 'hex' && h.start === 0) {
           return index >= 2 && index <= 3;  // Match the '01' in '0x01'
         }
-        // For binary, we need to match the corresponding 8-bit section
-        if (type === 'binary' && h.start === 0) {
-          return index >= 0 && index <= 7;  // Match the first byte
+        // For binary, we need to match the corresponding 4-bit section
+        if (type === 'binary') {
+          // Find the start and end of the current binary number
+          let numberStart = 0;
+          let numberEnd = input.length;
+          
+          // Walk backwards to find the start of this number
+          for (let i = index; i >= 0; i--) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              numberStart = i + 1;
+              break;
+            }
+          }
+          
+          // Walk forwards to find the end of this number
+          for (let i = index; i < input.length; i++) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              numberEnd = i;
+              break;
+            }
+          }
+          
+          // Calculate positions relative to the start of this number
+          const relativeIndex = index - numberStart;
+          const bytePosition = Math.floor(relativeIndex / 4);
+          
+          // Do the same for the highlight position
+          let highlightNumberStart = 0;
+          let highlightNumberEnd = input.length;
+          
+          // Find the boundaries of the highlighted number
+          for (let i = h.start; i >= 0; i--) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              highlightNumberStart = i + 1;
+              break;
+            }
+          }
+          for (let i = h.start; i < input.length; i++) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              highlightNumberEnd = i;
+              break;
+            }
+          }
+          
+          // Only highlight if we're in the same number and same nibble position
+          const highlightRelativeIndex = h.start - highlightNumberStart;
+          const highlightBytePos = Math.floor(highlightRelativeIndex / 4);
+          
+          return bytePosition === highlightBytePos && 
+                 numberStart === highlightNumberStart && 
+                 numberEnd === highlightNumberEnd;
+        }
+        // For ASCII, we need to match the corresponding hex/binary representations
+        if (type === 'ascii' && h.start === index) {
+          return true;  // Match the ASCII char
         }
         return index >= h.start && index < h.end;
       });
@@ -115,8 +167,59 @@ export const NumberInput = ({
         if (type === 'hex' && h.start === 0) {
           return index >= 2 && index <= 3;
         }
-        if (type === 'binary' && h.start === 0) {
-          return index >= 0 && index <= 7;
+        if (type === 'binary') {
+          // Find the start and end of the current binary number
+          let numberStart = 0;
+          let numberEnd = input.length;
+          
+          // Walk backwards to find the start of this number
+          for (let i = index; i >= 0; i--) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              numberStart = i + 1;
+              break;
+            }
+          }
+          
+          // Walk forwards to find the end of this number
+          for (let i = index; i < input.length; i++) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              numberEnd = i;
+              break;
+            }
+          }
+          
+          // Calculate positions relative to the start of this number
+          const relativeIndex = index - numberStart;
+          const bytePosition = Math.floor(relativeIndex / 4);
+          
+          // Do the same for the highlight position
+          let highlightNumberStart = 0;
+          let highlightNumberEnd = input.length;
+          
+          // Find the boundaries of the highlighted number
+          for (let i = h.start; i >= 0; i--) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              highlightNumberStart = i + 1;
+              break;
+            }
+          }
+          for (let i = h.start; i < input.length; i++) {
+            if (/[+\-*/%&|^~<> ]/.test(input[i])) {
+              highlightNumberEnd = i;
+              break;
+            }
+          }
+          
+          // Only highlight if we're in the same number and same nibble position
+          const highlightRelativeIndex = h.start - highlightNumberStart;
+          const highlightBytePos = Math.floor(highlightRelativeIndex / 4);
+          
+          return bytePosition === highlightBytePos && 
+                 numberStart === highlightNumberStart && 
+                 numberEnd === highlightNumberEnd;
+        }
+        if (type === 'ascii' && h.start === index) {
+          return true;
         }
         return index >= h.start && index < h.end;
       });
@@ -128,7 +231,15 @@ export const NumberInput = ({
           index={index}
           isHighlighted={isHighlighted}
           highlightColor={highlight?.color}
-          onMouseEnter={() => onMouseMove?.(index)}
+          onMouseEnter={() => {
+            if (type === 'ascii') {
+              // When hovering an ASCII char, we want to highlight the corresponding parts in other views
+              const charCode = char.charCodeAt(0);
+              onMouseMove?.(index);
+            } else {
+              onMouseMove?.(index);
+            }
+          }}
           onMouseLeave={onMouseLeave}
         />
       );
