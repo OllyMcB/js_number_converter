@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect } from 'react';
+import { ChangeEvent, useEffect, useRef, KeyboardEvent } from 'react';
 import { Paper, Typography, Box } from '@mui/material';
 import styles from './NumberInput.module.scss';
 
@@ -20,18 +20,46 @@ export const NumberInput = ({
   onChange,
   type = 'decimal' 
 }: NumberInputProps) => {
-  // Debug prop updates
+  const inputRef = useRef<HTMLInputElement>(null);
+  const cursorPositionRef = useRef<number | null>(null);
+
   useEffect(() => {
-    console.log(`[${type}] Value prop updated:`, { value });
-  }, [value, type]);
+    // Restore cursor position after value update
+    if (inputRef.current && cursorPositionRef.current !== null) {
+      inputRef.current.setSelectionRange(
+        cursorPositionRef.current,
+        cursorPositionRef.current
+      );
+      cursorPositionRef.current = null;
+    }
+  }, [value]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    console.log(`[${type}] Input Change:`, {
-      value: e.target.value,
-      previousValue: value,
-      keyCode: e.target.value.charCodeAt(e.target.value.length - 1)
-    });
+    // Store cursor position before update
+    cursorPositionRef.current = e.target.selectionStart;
     onChange(e.target.value);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      const target = e.currentTarget;
+      const start = target.selectionStart || 0;
+      const end = target.selectionEnd || 0;
+      
+      if (start === end) {
+        // Single character deletion
+        const newValue = value.substring(0, start - 1) + value.substring(start);
+        cursorPositionRef.current = start - 1;
+        onChange(newValue);
+        e.preventDefault();
+      } else {
+        // Range deletion
+        const newValue = value.substring(0, start) + value.substring(end);
+        cursorPositionRef.current = start;
+        onChange(newValue);
+        e.preventDefault();
+      }
+    }
   };
 
   // Split value into input and result, but don't trim spaces
@@ -66,18 +94,13 @@ export const NumberInput = ({
       </Typography>
       <Box className={styles.inputContainer}>
         <input
+          ref={inputRef}
           type="text"
           value={input || ''}
           placeholder={placeholder}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           className={styles.rawInput}
-          onKeyDown={(e) => {
-            console.log(`[${type}] Key Down:`, {
-              key: e.key,
-              keyCode: e.keyCode,
-              value: e.currentTarget.value
-            });
-          }}
         />
         {hasCalculation && result && (
           <Typography 

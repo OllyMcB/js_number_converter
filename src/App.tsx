@@ -132,14 +132,11 @@ function App() {
   });
 
   const handleDecimalChange = (value: string) => {
-    console.log('Decimal Change Start:', { value });
-    
     // Always update the decimal field immediately
     setValues({ ...values, decimal: value });
 
     // Only check for calculation if we have an operator
     if (/[+\-*/%&|^~<>]/.test(value)) {
-      console.log('Detected operator, evaluating:', { value });
       const result = evaluateExpression(value, 10);
       if (result !== null) {
         const resultValues = convertNumber(result);
@@ -153,40 +150,26 @@ function App() {
       }
     }
 
-    // Handle normal conversion
-    if (value.trim() === '') {
-      console.log('Empty value, clearing fields');
-      setValues({ decimal: value, hex: '', binary: '', ascii: '' });
+    // Handle empty input
+    if (!value) {
+      setValues({ decimal: '', hex: '', binary: '', ascii: '' });
       return;
     }
 
-    // Only convert valid numbers, preserve original input
+    // Convert numbers and preserve spaces exactly as they appear
     const numbers = value.split(' ');
-    console.log('Split numbers:', { numbers });
-    
     const conversions = numbers.map(n => {
-      const trimmed = n.trim();
-      console.log('Processing number:', { original: n, trimmed });
-      if (!trimmed) return null; // Preserve empty spaces
-      const num = parseInt(trimmed);
-      return !isNaN(num) ? convertNumber(num) : null;
+      if (n === '') return { hex: '', binary: '', ascii: '' }; // Preserve empty strings for consecutive spaces
+      const num = parseInt(n);
+      return !isNaN(num) ? convertNumber(num) : { hex: '', binary: '', ascii: '' };
     });
 
-    // Only update other fields if we have valid conversions
-    if (conversions.some(c => c !== null)) {
-      console.log('Setting converted values:', {
-        decimal: value,
-        hex: conversions.map(n => n?.hex || '').join(' '),
-        binary: conversions.map(n => n?.binary || '').join(' ')
-      });
-      
-      setValues({
-        decimal: value, // Preserve original input
-        hex: conversions.map(n => n?.hex || '').join(' '),
-        binary: conversions.map(n => n?.binary || '').join(' '),
-        ascii: conversions.filter(n => n !== null).map(n => n?.ascii).join('')
-      });
-    }
+    setValues({
+      decimal: value,
+      hex: conversions.map(n => n.hex).join(' '),
+      binary: conversions.map(n => n.binary).join(' '),
+      ascii: conversions.filter(n => n.ascii).map(n => n.ascii).join('')
+    });
   };
 
   const handleHexChange = (value: string) => {
@@ -207,31 +190,27 @@ function App() {
       return;
     }
 
-    // Handle normal conversion
-    if (value.trim() === '') {
-      setValues({ decimal: '', hex: value, binary: '', ascii: '' });
+    // Handle empty input
+    if (!value) {
+      setValues({ decimal: '', hex: '', binary: '', ascii: '' });
       return;
     }
 
-    // Only convert valid numbers, preserve original input
+    // Convert numbers and preserve spaces exactly as they appear
     const numbers = value.split(' ');
     const conversions = numbers.map(n => {
-      const trimmed = n.trim();
-      if (!trimmed) return null; // Preserve empty spaces
-      const cleanHex = trimmed.toLowerCase().replace(/^0x/, '');
+      if (n === '') return { decimal: '', binary: '', ascii: '' }; // Preserve empty strings for consecutive spaces
+      const cleanHex = n.toLowerCase().replace(/^0x/, '');
       const num = parseInt(cleanHex, 16);
-      return !isNaN(num) ? convertNumber(num) : null;
+      return !isNaN(num) ? convertNumber(num) : { decimal: '', binary: '', ascii: '' };
     });
 
-    // Only update other fields if we have valid conversions
-    if (conversions.some(c => c !== null)) {
-      setValues({
-        decimal: conversions.map(n => n?.decimal || '').join(' '),
-        hex: value, // Preserve original input
-        binary: conversions.map(n => n?.binary || '').join(' '),
-        ascii: conversions.filter(n => n !== null).map(n => n?.ascii).join('')
-      });
-    }
+    setValues({
+      decimal: conversions.map(n => n.decimal).join(' '),
+      hex: value,
+      binary: conversions.map(n => n.binary).join(' '),
+      ascii: conversions.filter(n => n.ascii).map(n => n.ascii).join('')
+    });
   };
 
   const handleBinaryChange = (value: string) => {
@@ -251,30 +230,26 @@ function App() {
       return;
     }
 
-    // Handle normal conversion
-    if (value.trim() === '') {
-      setValues({ decimal: '', hex: '', binary: value, ascii: '' });
+    // Handle empty input
+    if (!value) {
+      setValues({ decimal: '', hex: '', binary: '', ascii: '' });
       return;
     }
 
-    // Only convert valid numbers, preserve original input
+    // Convert numbers and preserve spaces exactly as they appear
     const numbers = value.split(' ');
     const conversions = numbers.map(n => {
-      const trimmed = n.trim();
-      if (!trimmed) return null; // Preserve empty spaces
-      const num = parseInt(trimmed, 2);
-      return !isNaN(num) ? convertNumber(num) : null;
+      if (n === '') return { decimal: '', hex: '', ascii: '' }; // Preserve empty strings for consecutive spaces
+      const num = parseInt(n, 2);
+      return !isNaN(num) ? convertNumber(num) : { decimal: '', hex: '', ascii: '' };
     });
 
-    // Only update other fields if we have valid conversions
-    if (conversions.some(c => c !== null)) {
-      setValues({
-        decimal: conversions.map(n => n?.decimal || '').join(' '),
-        hex: conversions.map(n => n?.hex || '').join(' '),
-        binary: value, // Preserve original input
-        ascii: conversions.filter(n => n !== null).map(n => n?.ascii).join('')
-      });
-    }
+    setValues({
+      decimal: conversions.map(n => n.decimal).join(' '),
+      hex: conversions.map(n => n.hex).join(' '),
+      binary: value,
+      ascii: conversions.filter(n => n.ascii).map(n => n.ascii).join('')
+    });
   };
 
   const handleAsciiChange = (value: string) => {
