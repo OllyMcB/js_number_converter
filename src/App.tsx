@@ -53,9 +53,11 @@ function App() {
 
   const padHex = (hexStr: string): string => {
     // Remove '0x' prefix if it exists
-    const hex = hexStr.replace(/^0x/, '');
+    const hex = hexStr.replace(/^0x/, '').toUpperCase();
     // If the length is odd, pad with one zero
-    return '0x' + (hex.length % 2 === 1 ? '0' + hex : hex);
+    const paddedHex = hex.length % 2 === 1 ? '0' + hex : hex;
+    // Ensure at least 2 digits
+    return '0x' + (paddedHex.length === 0 ? '00' : paddedHex);
   };
 
   const convertNumber = (num: number): NumberValues => ({
