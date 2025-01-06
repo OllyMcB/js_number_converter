@@ -1,88 +1,13 @@
-<!DOCTYPE html>
-<html lang="en-GB">
-   <head>
-   		<!-- Changes title of page in browser tab -->
-   		<title>Number Converter</title>
-   		<!-- Links code to most recent version of Bootstrap -->
-   		<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.2/css/bootstrap.min.css" /> -->
-   		<!-- Links code to most recent version of Fontawesome -->
-      	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" type="text/css" />
-      	<!-- Links code to CSS -->
-      	<link rel="stylesheet" type="text/css" href="style.css" />
-		  <link rel="shortcut icon" type="image/png" href="images/favicon-16x16.png"/>
-   </head>
-
-   <body>
-		<div class="container-page">
-			<div class="container-calculator">
-				<h1>Number Converter</h1>
-				<div class="container-calculations">
-					<div class="calculations-top">
-						<span class="calculations-text">Decimal</span>
-						<!-- <i class="calculations-text calculations-text-right fas fa-cog"></i> -->
-					</div>
-					<div class="calculations-bottom">
-						<input type="text" class="calculations-text calculations-input" id="dec_field" placeholder="Dec"></span>
-						<input type="text" class="calculations-text calculations-text-right calculations-answer" id="dec_answer" disabled=true></span>
-					</div>
-				</div>
-				<div class="container-calculations">
-					<div class="calculations-top">
-						<span class="calculations-text">Hex</span>
-						<!-- <i class="calculations-text calculations-text-right fas fa-cog"></i> -->
-					</div>
-					<div class="calculations-bottom">
-						<input type="text"  class="calculations-text calculations-input" id="hex_field" placeholder="Hex"></span>
-						<input type="text"  class="calculations-text calculations-text-right calculations-answer" id="hex_answer" disabled=true></span>
-					</div>
-				</div>
-				<div class="container-calculations">
-					<div class="calculations-top">
-						<span class="calculations-text">Binary</span>
-						<!-- <i class="calculations-text calculations-text-right fas fa-cog"></i> -->
-					</div>
-					<div class="calculations-bottom">
-						<input type="text"  class="calculations-text calculations-input" id="bin_field" placeholder="Bin"></span>
-						<input type="text"  class="calculations-text calculations-text-right calculations-answer" id="bin_answer" disabled=true></span>
-					</div>
-				</div>
-				<div class="container-calculations">
-					<div class="calculations-top">
-						<span class="calculations-text">ASCII</span>
-						<!-- <i class="calculations-text calculations-text-right fas fa-cog"></i> -->
-					</div>
-					<div class="calculations-bottom">
-						<input type="text"  class="calculations-text calculations-input" id="ascii_field" placeholder="ASCII"></span>
-						<input type="text"  class="calculations-text calculations-text-right calculations-answer" id="ascii_answer" disabled=true></span>
-					</div>
-				</div>
-				<div class="container-icons">
-					<i class="icon icon-question fas fa-question"></i>
-					<!-- <i class="icon icon-gear fas fa-cog"></i> -->
-					<div class="dropdown-settings">
-						<button class="icon-gear fas fa-cog"></button>
-						<div class="dropdown-settings-content">
-							<a href="#">Link 1</a>
-							<a href="#">Link 2</a>
-							<a href="#">Link 3</a>
-						</div>
-					</div>
-				</div>
-			</div>   			
-		</div>
-		
-		<!-- <div class="dropdown-settings">
-			<button class="icon-gear fas fa-cog"></button>
-			<div class="dropdown-settings-content">
-				<a href="#">Link 1</a>
-				<a href="#">Link 2</a>
-				<a href="#">Link 3</a>
-			</div>
-		</div> -->
-		
-		<script src="converter.js"></script> 
-		<script src="app.js"></script> 
-   		
-   		<!-- Links code to most recent version of Bootstrap  -->
-   		<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script> -->
-   </body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
