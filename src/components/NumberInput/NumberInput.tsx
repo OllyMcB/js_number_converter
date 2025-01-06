@@ -1,5 +1,5 @@
-import { ChangeEvent } from 'react';
-import { TextField, Paper, Typography } from '@mui/material';
+import { ChangeEvent, useEffect } from 'react';
+import { Paper, Typography, Box } from '@mui/material';
 import styles from './NumberInput.module.scss';
 
 interface NumberInputProps {
@@ -20,21 +20,27 @@ export const NumberInput = ({
   onChange,
   type = 'decimal' 
 }: NumberInputProps) => {
+  // Debug prop updates
+  useEffect(() => {
+    console.log(`[${type}] Value prop updated:`, { value });
+  }, [value, type]);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    let newValue = e.target.value;
-
-    // Preserve leading zeros for binary
-    if (type === 'binary' && value.startsWith('0') && newValue.length > value.length) {
-      newValue = value + newValue.slice(value.length);
-    }
-
-    // Allow '0x' prefix for hex
-    if (type === 'hex' && value === '0' && newValue === '0x') {
-      newValue = '0x';
-    }
-
-    onChange(newValue);
+    console.log(`[${type}] Input Change:`, {
+      value: e.target.value,
+      previousValue: value,
+      keyCode: e.target.value.charCodeAt(e.target.value.length - 1)
+    });
+    onChange(e.target.value);
   };
+
+  // Split value into input and result, but don't trim spaces
+  const parts = value.split('=');
+  const input = parts[0];
+  const result = parts[1]?.trim(); // Only trim the result part
+  const hasCalculation = value.includes('=');
+
+  console.log(`[${type}] Rendering with:`, { input, value });
 
   return (
     <Paper 
@@ -58,22 +64,33 @@ export const NumberInput = ({
       >
         {label}
       </Typography>
-      <TextField
-        fullWidth
-        variant="outlined"
-        value={value}
-        placeholder={placeholder}
-        onChange={handleChange}
-        className={styles.input}
-        size="small"
-        autoComplete="off"
-        inputProps={{
-          spellCheck: false,
-          autoComplete: 'off',
-          'data-form-type': 'other',
-          'aria-autocomplete': 'none'
-        }}
-      />
+      <Box className={styles.inputContainer}>
+        <input
+          type="text"
+          value={input || ''}
+          placeholder={placeholder}
+          onChange={handleChange}
+          className={styles.rawInput}
+          onKeyDown={(e) => {
+            console.log(`[${type}] Key Down:`, {
+              key: e.key,
+              keyCode: e.keyCode,
+              value: e.currentTarget.value
+            });
+          }}
+        />
+        {hasCalculation && result && (
+          <Typography 
+            className={styles.result}
+            sx={{
+              color: 'text.secondary',
+              fontFamily: 'Roboto Mono, monospace'
+            }}
+          >
+            = {result}
+          </Typography>
+        )}
+      </Box>
     </Paper>
   );
 }; 
