@@ -1,6 +1,66 @@
 # Number Converter
 
-## Layout
+A modern, interactive number conversion tool built with React that allows real-time conversion between different number representations.
+
+## Features
+
+### Core Functionality
+- Real-time number conversion between:
+  - Decimal (Base 10)
+  - Hexadecimal (Base 16)
+  - Binary (Base 2)
+  - ASCII characters
+- Support for mathematical operations:
+  - Basic arithmetic (addition, subtraction, multiplication, division)
+  - Bitwise operations (AND, OR, NOT, XOR, shifts)
+  - Modulo operations
+- Dynamic field expansion for mathematical operations
+- Cross-format calculations (e.g., decimal + hexadecimal)
+- Intelligent parsing of number formats without explicit separators
+
+### User Interface
+- Clean, modern interface with responsive design
+- Interactive field highlighting and validation
+- Customisable display settings per field
+- Hover-based character highlighting across all representations
+- Keyboard navigation support
+- Clear all fields functionality
+- Contextual help system
+
+### Customisation Options
+Each number field includes configurable settings:
+- Number grouping (4, 8, 16 bits)
+- Number representation (8-bit, 16-bit, 32-bit)
+- Group spacing preferences
+- Case formatting (upper/lowercase)
+- Prefix display (0x, b, etc.)
+- Endianness selection
+- Hover highlighting toggles
+
+## Technical Architecture
+
+### Frontend Stack
+- React 18+
+- TypeScript
+- CSS Modules for styling
+- State Management: [TBD]
+
+### Key Components
+- NumberInput: Base input component with format-specific validation
+- ConversionDisplay: Results display with formatting options
+- SettingsPanel: Configuration interface for each number format
+- MathProcessor: Handles mathematical operations
+- HighlightManager: Manages cross-field highlighting
+
+## Development Setup
+
+[To be added after initial React setup]
+
+## Project Structure
+
+[To be added after initial React setup]
+
+## Original Layout Design
              _______________________
         Dec |_______________________| *
              _______________________
@@ -11,53 +71,29 @@
       ASCII |_______________________| *
                    (?)     (X)
 
-## Goal
-- Numbers can be entered in any field
-- The number label turns bold upon valid input, or red upon invalid
-- Entered number is auto-converted into other fields
-- Support math operations
-  - Addition/subtraction
-  - Multiplication/division
-  - Bitwise and/or/not/xor/shift
-  - Modulo
-- If math is detected
-  - Expand fields to wide format
-  - Auto convert & display each number into other fields
-  - Allow math between different number types (e.g. 123 & 0x0F)
-  - Right-justify answer
-- Gear 'settings' icon next to each field
-  - Group numbers (e.g. 4, 8, 16) / Representation (e.g. 8-bit, 16-bit, 32-bit)
-  - Spacing between groups
-  - Upper/lowercase
-  - Add/remove prefix (e.g. '0x', 'b')
-  - Endianness
-  - Enable/disable 'colour highlight on hover'
-- If a word is entered into ASCII, decode each char
-- Hovering over the question mark (?) explains how to use
-- Clicking the (X) will clear the fields
-- If you hover over a single character within a word/number, then that section of the word/number will be highligthed in each of the other fields. For example, hovering over the '2' in the word '0x12' will result in the right 4 digits of '001**0010**' change colour. The intention is that it makes it easier to understand the composition of larger numbers.
+## Optimisation Goals
+- Efficient parsing with change detection
+- Intelligent grouping of characters into 8-bit words
+- Responsive UI with minimal re-renders
+- Optimal state management for real-time updates
 
+## Future Improvements
+- Advanced number format support (octal, custom bases)
+- History of conversions
+- Export/import functionality
+- Keyboard shortcuts
+- Mobile-optimised interface
+- Unit tests and integration tests
+- Performance monitoring
+- Accessibility improvements
+- Localisation support
 
-## Optimisation/Improvement Ideas
-- When parsing, store a copy of the full string. Upon next request to parse (e.g. upon next 'input' event), compare the new string with the previously stored string. If they are similar, then we may only have to parse the bit that changed, rather than the full string again.
-- If a space separator is not used between 'number words' & operands, the parser should still work (i.e. it should detect a number word followed by an operand)
-- Pressing the 'tab' key should select each field in an intuitive order
-- Hover over a character to highlight it in all representations
-  - Therefore each character should be stored as a unique object
-  - Characters should be grouped into 8-bit words (e.g. 00001111, 0F, '?', 126)
+## Contributing
+Contributions are welcome! Please read our contributing guidelines (to be added).
 
+### Contributors
+- [Original Author]
+- Zoe Thexton
 
-## Name Ideas
-- Num Tool
-- Number Converter
-- Num Rep (Number Representation)
-
-## Layout Concept
-- Need to add rounded corners to field
-- Add a (?) button below the fields to allow a user to hover for help
-- Add a (x) button below the fields to clear entries
-- Maybe use a single gear below the fields
-![concept](images/layout_concept.jpeg)
-
-## TODO
-- Add Zoe Thexton as a contributor
+## License
+[To be added]
