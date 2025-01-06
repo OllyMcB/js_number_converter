@@ -25,6 +25,18 @@ interface NumberValues {
   ascii: string
 }
 
+interface HighlightInfo {
+  sourceType: 'decimal' | 'hex' | 'binary' | 'ascii';
+  position: number;
+  length: number;
+}
+
+interface NumberInputHighlight {
+  start: number;
+  end: number;
+  color: string;
+}
+
 interface CalculationResult {
   input: NumberValues
   result: NumberValues
@@ -39,6 +51,7 @@ Number Converter allows you to:
   + - * / % & | ^ << >> ~
 • See ASCII characters for each number
 • Toggle between light and dark mode
+• Hover over numbers to see corresponding bits
 `;
 
 function App() {
@@ -47,9 +60,139 @@ function App() {
     hex: '',
     binary: '',
     ascii: ''
-  })
-  const [darkMode, setDarkMode] = useState(false)
-  const theme = useTheme()
+  });
+  const [highlight, setHighlight] = useState<HighlightInfo | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const theme = useTheme();
+
+  // Calculate highlights for each input type based on hover
+  const getHighlights = (type: 'decimal' | 'hex' | 'binary' | 'ascii'): NumberInputHighlight[] => {
+    if (!highlight) return [];
+
+    const numbers = values[type].split(' ');
+    const sourceNumbers = values[highlight.sourceType].split(' ');
+    const sourceIndex = sourceNumbers.findIndex((_, i) => {
+      const start = sourceNumbers.slice(0, i).join(' ').length + (i > 0 ? 1 : 0);
+      const end = start + sourceNumbers[i].length;
+      return highlight.position >= start && highlight.position < end;
+    });
+
+    if (sourceIndex === -1) return [];
+
+    const targetNumber = numbers[sourceIndex];
+    if (!targetNumber) return [];
+
+    const highlights: NumberInputHighlight[] = [];
+    
+    if (highlight.sourceType === 'hex') {
+      const hexValue = sourceNumbers[sourceIndex];
+      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
+      
+      // Only highlight if hovering over actual hex digits (not 0x prefix)
+      if (relativePos >= 2 && relativePos < hexValue.length) {
+        const hexDigit = relativePos - 2; // Adjust for 0x prefix
+        const startBit = hexDigit * 4;
+        
+        if (type === 'binary') {
+          // Highlight corresponding 4 bits in binary
+          highlights.push({
+            start: startBit,
+            end: startBit + 4,
+            color: '#ff69b4' // pink
+          });
+        } else if (type === 'hex') {
+          // Highlight the hex digit itself
+          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0) + relativePos;
+          highlights.push({
+            start,
+            end: start + 1,
+            color: '#ff69b4' // pink
+          });
+        } else if (type === 'decimal') {
+          // Highlight the decimal value
+          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
+          highlights.push({
+            start,
+            end: start + numbers[sourceIndex].length,
+            color: '#ff69b4' // pink
+          });
+        }
+      }
+    } else if (highlight.sourceType === 'binary') {
+      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
+      const hexDigit = Math.floor(relativePos / 4);
+      
+      if (type === 'binary') {
+        // Highlight the binary digit group
+        const groupStart = Math.floor(relativePos / 4) * 4;
+        highlights.push({
+          start: groupStart,
+          end: groupStart + 4,
+          color: '#ff69b4' // pink
+        });
+      } else if (type === 'hex') {
+        // Highlight corresponding hex digit
+        const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0) + hexDigit + 2; // +2 for 0x
+        highlights.push({
+          start,
+          end: start + 1,
+          color: '#ff69b4' // pink
+        });
+      } else if (type === 'decimal') {
+        // Highlight the decimal value
+        const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
+        highlights.push({
+          start,
+          end: start + numbers[sourceIndex].length,
+          color: '#ff69b4' // pink
+        });
+      }
+    } else if (highlight.sourceType === 'decimal') {
+      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
+      
+      if (relativePos < sourceNumbers[sourceIndex].length) {
+        if (type === 'decimal') {
+          // Highlight the decimal digit
+          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0) + relativePos;
+          highlights.push({
+            start,
+            end: start + 1,
+            color: '#ff69b4' // pink
+          });
+        } else if (type === 'hex' || type === 'binary') {
+          // Highlight the full corresponding value
+          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
+          highlights.push({
+            start,
+            end: start + numbers[sourceIndex].length,
+            color: '#ff69b4' // pink
+          });
+        }
+      }
+    } else if (highlight.sourceType === 'ascii') {
+      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
+      
+      if (relativePos < sourceNumbers[sourceIndex].length) {
+        // Highlight the full corresponding value in all other types
+        const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
+        highlights.push({
+          start,
+          end: start + numbers[sourceIndex].length,
+          color: '#ff69b4' // pink
+        });
+      }
+    }
+
+    return highlights;
+  };
+
+  const handleMouseMove = (type: 'decimal' | 'hex' | 'binary' | 'ascii', position: number) => {
+    setHighlight({ sourceType: type, position, length: 1 });
+  };
+
+  const handleMouseLeave = () => {
+    setHighlight(null);
+  };
 
   const padHex = (hexStr: string): string => {
     // Remove '0x' prefix if it exists
@@ -57,13 +200,22 @@ function App() {
     // If the length is odd, pad with one zero
     const paddedHex = hex.length % 2 === 1 ? '0' + hex : hex;
     // Ensure at least 2 digits
-    return '0x' + (paddedHex.length === 0 ? '00' : paddedHex);
+    const finalHex = paddedHex.length === 0 ? '00' : paddedHex;
+    // Add 0x prefix
+    return '0x' + finalHex;
+  };
+
+  const padBinary = (binStr: string): string => {
+    // Calculate how many bits we need
+    const len = binStr.length;
+    const targetLength = Math.ceil(len / 8) * 8;
+    return binStr.padStart(targetLength, '0');
   };
 
   const convertNumber = (num: number): NumberValues => ({
     decimal: num.toString(),
     hex: padHex(num.toString(16).toUpperCase()),
-    binary: num.toString(2).padStart(8, '0'),
+    binary: padBinary(num.toString(2)),
     ascii: String.fromCharCode(num)
   });
 
@@ -144,8 +296,8 @@ function App() {
         const resultValues = convertNumber(result);
         setValues(formatCalculationResult({ 
           decimal: value,
-          hex: value.replace(/\d+/g, num => '0x' + parseInt(num).toString(16).toUpperCase()),
-          binary: value.replace(/\d+/g, num => parseInt(num).toString(2)),
+          hex: value.replace(/\d+/g, num => padHex(parseInt(num).toString(16))),
+          binary: value.replace(/\d+/g, num => padBinary(parseInt(num).toString(2))),
           ascii: ''
         }, resultValues));
         return;
@@ -185,8 +337,8 @@ function App() {
       const resultValues = convertNumber(result);
       setValues(formatCalculationResult({ 
         decimal: value.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString()),
-        hex: value,
-        binary: value.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString(2)),
+        hex: value.replace(/0x[\da-f]+/gi, num => padHex(parseInt(num, 16).toString(16))),
+        binary: value.replace(/0x[\da-f]+/gi, num => padBinary(parseInt(num, 16).toString(2))),
         ascii: ''
       }, resultValues));
       return;
@@ -226,7 +378,7 @@ function App() {
       setValues(formatCalculationResult({ 
         decimal: value.replace(/[01]+/g, num => parseInt(num, 2).toString()),
         hex: value.replace(/[01]+/g, num => '0x' + parseInt(num, 2).toString(16).toUpperCase()),
-        binary: value,
+        binary: value.replace(/[01]+/g, num => padBinary(parseInt(num, 2).toString(2))),
         ascii: ''
       }, resultValues));
       return;
@@ -310,6 +462,9 @@ function App() {
                 placeholder="Enter decimal number(s)"
                 onChange={handleDecimalChange}
                 type="decimal"
+                highlights={getHighlights('decimal')}
+                onMouseMove={(pos) => handleMouseMove('decimal', pos)}
+                onMouseLeave={handleMouseLeave}
               />
               <NumberInput
                 label="Hex"
@@ -317,6 +472,9 @@ function App() {
                 placeholder="Enter hex number(s)"
                 onChange={handleHexChange}
                 type="hex"
+                highlights={getHighlights('hex')}
+                onMouseMove={(pos) => handleMouseMove('hex', pos)}
+                onMouseLeave={handleMouseLeave}
               />
               <NumberInput
                 label="Binary"
@@ -324,6 +482,9 @@ function App() {
                 placeholder="Enter binary number(s)"
                 onChange={handleBinaryChange}
                 type="binary"
+                highlights={getHighlights('binary')}
+                onMouseMove={(pos) => handleMouseMove('binary', pos)}
+                onMouseLeave={handleMouseLeave}
               />
               <NumberInput
                 label="ASCII"
@@ -331,6 +492,9 @@ function App() {
                 placeholder="Enter ASCII character(s)"
                 onChange={handleAsciiChange}
                 type="ascii"
+                highlights={getHighlights('ascii')}
+                onMouseMove={(pos) => handleMouseMove('ascii', pos)}
+                onMouseLeave={handleMouseLeave}
               />
             </Box>
             <Box className="controls">

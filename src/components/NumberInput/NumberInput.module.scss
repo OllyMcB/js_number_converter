@@ -16,8 +16,13 @@
   margin: 0 1px;
 }
 
-.rawInput {
+.highlightContainer {
+  position: relative;
   flex: 1;
+  display: flex;
+}
+
+.rawInput {
   width: 100%;
   padding: 0.75rem 1rem;
   font-family: 'Roboto Mono', monospace;
@@ -27,6 +32,8 @@
   background: transparent;
   outline: none;
   transition: border-color 0.2s;
+  position: relative;
+  z-index: 1;
 
   &:focus {
     border-color: #1976d2;
@@ -39,11 +46,29 @@
   }
 }
 
+.highlights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem 1rem;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1rem;
+  pointer-events: none;
+  white-space: pre;
+  color: transparent;
+  z-index: 0;
+}
+
 .result {
   position: absolute;
   right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   padding: 0 0.5rem;
   background: inherit;
   font-size: 0.9em;
   white-space: nowrap;
+  z-index: 2;
 } 

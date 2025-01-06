@@ -1,6 +1,12 @@
-import { ChangeEvent, useEffect, useRef, KeyboardEvent } from 'react';
+import { ChangeEvent, useEffect, useRef, KeyboardEvent, MouseEvent } from 'react';
 import { Paper, Typography, Box } from '@mui/material';
 import styles from './NumberInput.module.scss';
+
+interface NumberInputHighlight {
+  start: number;
+  end: number;
+  color: string;
+}
 
 interface NumberInputProps {
   label: string;
@@ -8,6 +14,9 @@ interface NumberInputProps {
   placeholder: string;
   onChange: (value: string) => void;
   type?: 'hex' | 'binary' | 'decimal' | 'ascii';
+  highlights?: NumberInputHighlight[];
+  onMouseMove?: (position: number) => void;
+  onMouseLeave?: () => void;
 }
 
 /**
@@ -18,7 +27,10 @@ export const NumberInput = ({
   value, 
   placeholder, 
   onChange,
-  type = 'decimal' 
+  type = 'decimal',
+  highlights = [],
+  onMouseMove,
+  onMouseLeave
 }: NumberInputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number | null>(null);
@@ -62,13 +74,76 @@ export const NumberInput = ({
     }
   };
 
+  const handleMouseMove = (e: MouseEvent<HTMLInputElement>) => {
+    if (!onMouseMove) return;
+    
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
+    const x = e.clientX - rect.left - 16; // Adjust for padding
+    
+    // Calculate character position based on x coordinate
+    const charWidth = 9.6; // Adjusted monospace character width
+    const position = Math.floor((x + (charWidth / 2)) / charWidth); // Add half char width for better centering
+    
+    if (position >= 0) { // Only trigger if we're actually over text
+      onMouseMove(position);
+    }
+  };
+
   // Split value into input and result, but don't trim spaces
   const parts = value.split('=');
   const input = parts[0];
   const result = parts[1]?.trim(); // Only trim the result part
-  const hasCalculation = value.includes('=');
+  const hasCalculation = value.includes('=') && /[+\-*/%&|^~<>]/.test(input); // Only show result if there's a calculation
 
   console.log(`[${type}] Rendering with:`, { input, value });
+
+  // Create highlighted text spans
+  const renderHighlightedText = (text: string) => {
+    if (!highlights.length) return text;
+
+    const spans: JSX.Element[] = [];
+    let lastEnd = 0;
+
+    highlights.sort((a, b) => a.start - b.start).forEach((highlight, index) => {
+      // Add non-highlighted text before this highlight
+      if (highlight.start > lastEnd) {
+        spans.push(
+          <span key={`text-${index}`}>
+            {text.substring(lastEnd, highlight.start)}
+          </span>
+        );
+      }
+
+      // Add highlighted text
+      spans.push(
+        <span 
+          key={`highlight-${index}`}
+          style={{ 
+            backgroundColor: highlight.color,
+            borderRadius: '2px',
+            padding: '0 2px',
+            margin: '0 -2px'
+          }}
+        >
+          {text.substring(highlight.start, highlight.end)}
+        </span>
+      );
+
+      lastEnd = highlight.end;
+    });
+
+    // Add remaining non-highlighted text
+    if (lastEnd < text.length) {
+      spans.push(
+        <span key="text-end">
+          {text.substring(lastEnd)}
+        </span>
+      );
+    }
+
+    return <>{spans}</>;
+  };
 
   return (
     <Paper 
@@ -93,26 +168,35 @@ export const NumberInput = ({
         {label}
       </Typography>
       <Box className={styles.inputContainer}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={input || ''}
-          placeholder={placeholder}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          className={styles.rawInput}
-        />
-        {hasCalculation && result && (
-          <Typography 
-            className={styles.result}
-            sx={{
-              color: 'text.secondary',
-              fontFamily: 'Roboto Mono, monospace'
-            }}
-          >
-            = {result}
-          </Typography>
-        )}
+        <div 
+          className={styles.highlightContainer}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={onMouseLeave}
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={input || ''}
+            placeholder={placeholder}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            className={styles.rawInput}
+          />
+          <div className={styles.highlights}>
+            {renderHighlightedText(input || '')}
+          </div>
+          {hasCalculation && result && (
+            <Typography 
+              className={styles.result}
+              sx={{
+                color: 'text.secondary',
+                fontFamily: 'Roboto Mono, monospace'
+              }}
+            >
+              = {result}
+            </Typography>
+          )}
+        </div>
       </Box>
     </Paper>
   );
