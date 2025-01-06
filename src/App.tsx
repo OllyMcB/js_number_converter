@@ -69,117 +69,113 @@ function App() {
   const getHighlights = (type: 'decimal' | 'hex' | 'binary' | 'ascii'): NumberInputHighlight[] => {
     if (!highlight) return [];
 
-    const numbers = values[type].split(' ');
+    // Split into individual numbers and track their positions
     const sourceNumbers = values[highlight.sourceType].split(' ');
-    const sourceIndex = sourceNumbers.findIndex((_, i) => {
-      const start = sourceNumbers.slice(0, i).join(' ').length + (i > 0 ? 1 : 0);
+    const targetNumbers = values[type].split(' ');
+    
+    // Find which number we're hovering over in the source
+    let currentPos = 0;
+    let sourceNumberIndex = -1;
+    let relativePosition = -1;
+
+    for (let i = 0; i < sourceNumbers.length; i++) {
+      const start = currentPos;
       const end = start + sourceNumbers[i].length;
-      return highlight.position >= start && highlight.position < end;
-    });
+      
+      if (highlight.position >= start && highlight.position < end) {
+        sourceNumberIndex = i;
+        relativePosition = highlight.position - start;
+        break;
+      }
+      
+      currentPos = end + 1; // +1 for the space
+    }
 
-    if (sourceIndex === -1) return [];
+    if (sourceNumberIndex === -1 || sourceNumberIndex >= targetNumbers.length) return [];
 
-    const targetNumber = numbers[sourceIndex];
-    if (!targetNumber) return [];
+    // Calculate target number's starting position
+    let targetStartPos = 0;
+    for (let i = 0; i < sourceNumberIndex; i++) {
+      targetStartPos += targetNumbers[i].length + 1; // +1 for the space
+    }
 
     const highlights: NumberInputHighlight[] = [];
     
     if (highlight.sourceType === 'hex') {
-      const hexValue = sourceNumbers[sourceIndex];
-      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
+      const hexValue = sourceNumbers[sourceNumberIndex];
       
       // Only highlight if hovering over actual hex digits (not 0x prefix)
-      if (relativePos >= 2 && relativePos < hexValue.length) {
-        const hexDigit = relativePos - 2; // Adjust for 0x prefix
+      if (relativePosition >= 2 && relativePosition < hexValue.length) {
+        const hexDigit = relativePosition - 2; // Adjust for 0x prefix
         const startBit = hexDigit * 4;
         
         if (type === 'binary') {
           // Highlight corresponding 4 bits in binary
           highlights.push({
-            start: startBit,
-            end: startBit + 4,
+            start: targetStartPos + startBit,
+            end: targetStartPos + startBit + 4,
             color: '#ff69b4' // pink
           });
         } else if (type === 'hex') {
           // Highlight the hex digit itself
-          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0) + relativePos;
           highlights.push({
-            start,
-            end: start + 1,
+            start: targetStartPos + relativePosition,
+            end: targetStartPos + relativePosition + 1,
             color: '#ff69b4' // pink
           });
         } else if (type === 'decimal') {
           // Highlight the decimal value
-          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
           highlights.push({
-            start,
-            end: start + numbers[sourceIndex].length,
+            start: targetStartPos,
+            end: targetStartPos + targetNumbers[sourceNumberIndex].length,
             color: '#ff69b4' // pink
           });
         }
       }
     } else if (highlight.sourceType === 'binary') {
-      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
-      const hexDigit = Math.floor(relativePos / 4);
+      const binValue = sourceNumbers[sourceNumberIndex];
+      const hexDigit = Math.floor(relativePosition / 4);
       
       if (type === 'binary') {
         // Highlight the binary digit group
-        const groupStart = Math.floor(relativePos / 4) * 4;
+        const groupStart = Math.floor(relativePosition / 4) * 4;
         highlights.push({
-          start: groupStart,
-          end: groupStart + 4,
+          start: targetStartPos + groupStart,
+          end: targetStartPos + groupStart + 4,
           color: '#ff69b4' // pink
         });
       } else if (type === 'hex') {
         // Highlight corresponding hex digit
-        const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0) + hexDigit + 2; // +2 for 0x
         highlights.push({
-          start,
-          end: start + 1,
+          start: targetStartPos + hexDigit + 2, // +2 for 0x
+          end: targetStartPos + hexDigit + 3,
           color: '#ff69b4' // pink
         });
       } else if (type === 'decimal') {
         // Highlight the decimal value
-        const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
         highlights.push({
-          start,
-          end: start + numbers[sourceIndex].length,
+          start: targetStartPos,
+          end: targetStartPos + targetNumbers[sourceNumberIndex].length,
           color: '#ff69b4' // pink
         });
       }
     } else if (highlight.sourceType === 'decimal') {
-      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
-      
-      if (relativePos < sourceNumbers[sourceIndex].length) {
+      if (relativePosition < sourceNumbers[sourceNumberIndex].length) {
         if (type === 'decimal') {
           // Highlight the decimal digit
-          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0) + relativePos;
           highlights.push({
-            start,
-            end: start + 1,
+            start: targetStartPos + relativePosition,
+            end: targetStartPos + relativePosition + 1,
             color: '#ff69b4' // pink
           });
         } else if (type === 'hex' || type === 'binary') {
           // Highlight the full corresponding value
-          const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
           highlights.push({
-            start,
-            end: start + numbers[sourceIndex].length,
+            start: targetStartPos,
+            end: targetStartPos + targetNumbers[sourceNumberIndex].length,
             color: '#ff69b4' // pink
           });
         }
-      }
-    } else if (highlight.sourceType === 'ascii') {
-      const relativePos = highlight.position - (sourceNumbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0));
-      
-      if (relativePos < sourceNumbers[sourceIndex].length) {
-        // Highlight the full corresponding value in all other types
-        const start = numbers.slice(0, sourceIndex).join(' ').length + (sourceIndex > 0 ? 1 : 0);
-        highlights.push({
-          start,
-          end: start + numbers[sourceIndex].length,
-          color: '#ff69b4' // pink
-        });
       }
     }
 

@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useRef, KeyboardEvent, MouseEvent } from 'react';
+import { ChangeEvent, useEffect, useRef, KeyboardEvent } from 'react';
 import { Paper, Typography, Box } from '@mui/material';
 import styles from './NumberInput.module.scss';
 
@@ -19,9 +19,26 @@ interface NumberInputProps {
   onMouseLeave?: () => void;
 }
 
-/**
- * @brief Component for number input fields with consistent styling and behaviour
- */
+interface CharacterProps {
+  char: string;
+  index: number;
+  isHighlighted?: boolean;
+  highlightColor?: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}
+
+const Character = ({ char, index, isHighlighted, highlightColor, onMouseEnter, onMouseLeave }: CharacterProps) => (
+  <span
+    className={styles.character}
+    style={isHighlighted ? { backgroundColor: highlightColor } : undefined}
+    onMouseEnter={onMouseEnter}
+    onMouseLeave={onMouseLeave}
+  >
+    {char}
+  </span>
+);
+
 export const NumberInput = ({ 
   label, 
   value, 
@@ -36,7 +53,6 @@ export const NumberInput = ({
   const cursorPositionRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Restore cursor position after value update
     if (inputRef.current && cursorPositionRef.current !== null) {
       inputRef.current.setSelectionRange(
         cursorPositionRef.current,
@@ -47,7 +63,6 @@ export const NumberInput = ({
   }, [value]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    // Store cursor position before update
     cursorPositionRef.current = e.target.selectionStart;
     onChange(e.target.value);
   };
@@ -59,13 +74,11 @@ export const NumberInput = ({
       const end = target.selectionEnd || 0;
       
       if (start === end) {
-        // Single character deletion
         const newValue = value.substring(0, start - 1) + value.substring(start);
         cursorPositionRef.current = start - 1;
         onChange(newValue);
         e.preventDefault();
       } else {
-        // Range deletion
         const newValue = value.substring(0, start) + value.substring(end);
         cursorPositionRef.current = start;
         onChange(newValue);
@@ -74,75 +87,54 @@ export const NumberInput = ({
     }
   };
 
-  const handleMouseMove = (e: MouseEvent<HTMLInputElement>) => {
-    if (!onMouseMove) return;
-    
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
-    const x = e.clientX - rect.left - 16; // Adjust for padding
-    
-    // Calculate character position based on x coordinate
-    const charWidth = 9.6; // Adjusted monospace character width
-    const position = Math.floor((x + (charWidth / 2)) / charWidth); // Add half char width for better centering
-    
-    if (position >= 0) { // Only trigger if we're actually over text
-      onMouseMove(position);
-    }
-  };
-
   // Split value into input and result, but don't trim spaces
   const parts = value.split('=');
   const input = parts[0];
-  const result = parts[1]?.trim(); // Only trim the result part
-  const hasCalculation = value.includes('=') && /[+\-*/%&|^~<>]/.test(input); // Only show result if there's a calculation
+  const result = parts[1]?.trim();
+  const hasCalculation = value.includes('=') && /[+\-*/%&|^~<>]/.test(input);
 
-  console.log(`[${type}] Rendering with:`, { input, value });
+  const renderCharacters = () => {
+    if (!input && !result) return null;
 
-  // Create highlighted text spans
-  const renderHighlightedText = (text: string) => {
-    if (!highlights.length) return text;
+    const allChars: JSX.Element[] = [];
+    
+    // Add input characters
+    input.split('').forEach((char, index) => {
+      const isHighlighted = highlights.some(h => {
+        // For hex, we need to match the actual number part (after 0x)
+        if (type === 'hex' && h.start === 0) {
+          return index >= 2 && index <= 3;  // Match the '01' in '0x01'
+        }
+        // For binary, we need to match the corresponding 8-bit section
+        if (type === 'binary' && h.start === 0) {
+          return index >= 0 && index <= 7;  // Match the first byte
+        }
+        return index >= h.start && index < h.end;
+      });
+      const highlight = highlights.find(h => {
+        if (type === 'hex' && h.start === 0) {
+          return index >= 2 && index <= 3;
+        }
+        if (type === 'binary' && h.start === 0) {
+          return index >= 0 && index <= 7;
+        }
+        return index >= h.start && index < h.end;
+      });
 
-    const spans: JSX.Element[] = [];
-    let lastEnd = 0;
-
-    highlights.sort((a, b) => a.start - b.start).forEach((highlight, index) => {
-      // Add non-highlighted text before this highlight
-      if (highlight.start > lastEnd) {
-        spans.push(
-          <span key={`text-${index}`}>
-            {text.substring(lastEnd, highlight.start)}
-          </span>
-        );
-      }
-
-      // Add highlighted text
-      spans.push(
-        <span 
-          key={`highlight-${index}`}
-          style={{ 
-            backgroundColor: highlight.color,
-            borderRadius: '2px',
-            padding: '0 2px',
-            margin: '0 -2px'
-          }}
-        >
-          {text.substring(highlight.start, highlight.end)}
-        </span>
+      allChars.push(
+        <Character
+          key={`input-${index}`}
+          char={char}
+          index={index}
+          isHighlighted={isHighlighted}
+          highlightColor={highlight?.color}
+          onMouseEnter={() => onMouseMove?.(index)}
+          onMouseLeave={onMouseLeave}
+        />
       );
-
-      lastEnd = highlight.end;
     });
 
-    // Add remaining non-highlighted text
-    if (lastEnd < text.length) {
-      spans.push(
-        <span key="text-end">
-          {text.substring(lastEnd)}
-        </span>
-      );
-    }
-
-    return <>{spans}</>;
+    return allChars;
   };
 
   return (
@@ -168,22 +160,18 @@ export const NumberInput = ({
         {label}
       </Typography>
       <Box className={styles.inputContainer}>
-        <div 
-          className={styles.highlightContainer}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={onMouseLeave}
-        >
+        <div className={styles.displayContainer}>
           <input
             ref={inputRef}
             type="text"
             value={input || ''}
-            placeholder={placeholder}
+            placeholder=""
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className={styles.rawInput}
+            className={styles.hiddenInput}
           />
-          <div className={styles.highlights}>
-            {renderHighlightedText(input || '')}
+          <div className={styles.characters}>
+            {renderCharacters() || <span className={styles.placeholder}>{placeholder}</span>}
           </div>
           {hasCalculation && result && (
             <Typography 
