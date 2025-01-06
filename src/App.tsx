@@ -44,12 +44,19 @@ function App() {
   const [darkMode, setDarkMode] = useState(false)
   const theme = useTheme()
 
+  const padHex = (hexStr: string): string => {
+    // Remove '0x' prefix if it exists
+    const hex = hexStr.replace(/^0x/, '');
+    // If the length is odd, pad with one zero
+    return '0x' + (hex.length % 2 === 1 ? '0' + hex : hex);
+  };
+
   const convertNumber = (num: number): NumberValues => ({
     decimal: num.toString(),
-    hex: '0x' + num.toString(16).toUpperCase(),
+    hex: padHex(num.toString(16).toUpperCase()),
     binary: num.toString(2).padStart(8, '0'),
     ascii: String.fromCharCode(num)
-  })
+  });
 
   const handleDecimalChange = (value: string) => {
     setValues({ ...values, decimal: value })
@@ -95,9 +102,20 @@ function App() {
       }).filter(n => n !== null)
 
       if (conversions.length > 0) {
+        // Keep original input format if it's valid hex
+        const hexValues = numbers.map((n, i) => {
+          if (conversions[i]) {
+            // If original input has 0x, use padded version
+            return n.toLowerCase().startsWith('0x') ? 
+              padHex(n.slice(2).toUpperCase()) : 
+              n.toUpperCase();
+          }
+          return n;
+        });
+
         setValues({
           decimal: conversions.map(n => n?.decimal).join(' '),
-          hex: value,
+          hex: hexValues.join(' '),
           binary: conversions.map(n => n?.binary).join(' '),
           ascii: conversions.map(n => n?.ascii).join('')
         })
