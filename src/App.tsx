@@ -255,20 +255,31 @@ function App() {
 
   const evaluateExpression = (expression: string, base: number = 10): number | null => {
     try {
+      console.log('Evaluating expression:', expression);
+      
       // First check if we actually have an operator
       const hasOperator = /[+\-*/%&|^~<>]/.test(expression);
       if (!hasOperator) {
         return null;
       }
 
-      // Replace bitwise operators with spaces around them for proper parsing
-      const formattedExpr = expression
-        .replace(/([&|^~])/g, ' $1 ')
-        .replace(/(<<|>>)/g, ' $1 ')
-        .replace(/([+\-*/%])/g, ' $1 ')
-        .trim();
+      // First handle shift operators as they're two characters
+      const shiftReplaced = expression
+        .replace(/>>/g, '\u0001') // Use special characters as temporary replacements
+        .replace(/<</g, '\u0002');
 
-      const tokens = formattedExpr.split(' ').filter(t => t.length > 0);
+      // Now split by single operators while preserving them
+      const tokens = shiftReplaced
+        .split(/([+\-*/%&|^~])/)
+        .map(token => 
+          token
+            .replace('\u0001', '>>')
+            .replace('\u0002', '<<')
+            .trim()
+        )
+        .filter(t => t !== '');
+
+      console.log('Tokens after split:', tokens);
       
       // Handle unary operators first
       const processedTokens = tokens.map((token, i) => {
@@ -307,36 +318,53 @@ function App() {
       }
       
       return result;
-    } catch {
+    } catch (error) {
+      console.error('Error in evaluateExpression:', error);
       return null;
     }
   };
 
-  const formatCalculationResult = (input: NumberValues, result: NumberValues): NumberValues => ({
-    decimal: `${input.decimal} = ${result.decimal}`,
-    hex: `${input.hex} = ${result.hex}`,
-    binary: `${input.binary} = ${result.binary}`,
-    ascii: result.ascii // Don't show calculation for ASCII
-  });
+  const formatCalculationResult = (input: NumberValues, result: NumberValues): NumberValues => {
+    console.log('Input before format:', input);
+    // Remove any trailing spaces before adding the equals sign
+    const formatted = {
+      decimal: `${input.decimal.trimEnd()}=${result.decimal}`,
+      hex: `${input.hex.trimEnd()}=${result.hex}`,
+      binary: `${input.binary.trimEnd()}=${result.binary}`,
+      ascii: result.ascii
+    };
+    console.log('Output after format:', formatted);
+    return formatted;
+  };
+
+  /**
+   * @brief Checks if a math expression is complete and ready for evaluation
+   */
+  const isCompleteMathExpression = (value: string): boolean => {
+    // Must have an operator
+    if (!/[+\-*/%&|^~<>]/.test(value)) return false;
+    
+    // Must end with a number
+    if (!/\d$/.test(value)) return false;
+    
+    // For expressions with binary operators, must have numbers on both sides
+    const parts = value.split(/([+\-*/%&|^<>])/).filter(Boolean);
+    if (parts.length < 2) return false;
+    
+    // Special case for unary operator ~
+    if (parts[0] === '~') return /^\d+$/.test(parts[1]);
+    
+    // For binary operators, check both sides are numbers
+    const firstPart = parts[0];
+    const lastPart = parts[parts.length - 1];
+    return /^\d+$/.test(firstPart) && /^\d+$/.test(lastPart);
+  };
 
   const handleDecimalChange = (value: string) => {
+    console.log('Decimal input:', value);
+    
     // Always update the decimal field immediately
     setValues({ ...values, decimal: value });
-
-    // Only check for calculation if we have an operator
-    if (/[+\-*/%&|^~<>]/.test(value)) {
-      const result = evaluateExpression(value, 10);
-      if (result !== null) {
-        const resultValues = convertNumber(result);
-        setValues(formatCalculationResult({ 
-          decimal: value,
-          hex: value.replace(/\d+/g, num => padHex(parseInt(num).toString(16))),
-          binary: value.replace(/\d+/g, num => padBinary(parseInt(num).toString(2))),
-          ascii: ''
-        }, resultValues));
-        return;
-      }
-    }
 
     // Handle empty input
     if (!value) {
@@ -344,100 +372,244 @@ function App() {
       return;
     }
 
-    // Convert numbers and preserve spaces exactly as they appear
-    const numbers = value.split(' ');
-    const conversions = numbers.map(n => {
-      if (n === '') return { hex: '', binary: '', ascii: '' }; // Preserve empty strings for consecutive spaces
-      const num = parseInt(n);
-      return !isNaN(num) ? convertNumber(num) : { hex: '', binary: '', ascii: '' };
+    // First check if we have a complete math expression
+    if (/[+\-*/%&|^~<>]/.test(value) && !/\s$/.test(value)) {
+      const result = evaluateExpression(value.replace(/\s/g, ''), 10);
+      if (result !== null) {
+        const resultValues = convertNumber(result);
+        const input = {
+          decimal: value,
+          hex: value.replace(/\d+/g, num => padHex(parseInt(num).toString(16))),
+          binary: value.replace(/\d+/g, num => padBinary(parseInt(num).toString(2))),
+          ascii: ''
+        };
+        setValues(formatCalculationResult(input, resultValues));
+        return;
+      }
+    }
+
+    // If we get here, either there's no math expression or it's incomplete
+    // Split by spaces and handle each part
+    const parts = value.split(' ');
+    const conversions = parts.map(part => {
+      // Check if this part has a math expression
+      if (/[+\-*/%&|^~<>]/.test(part)) {
+        const result = evaluateExpression(part, 10);
+        if (result !== null) {
+          const resultValues = convertNumber(result);
+          return {
+            input: {
+              decimal: part,
+              hex: part.replace(/\d+/g, num => padHex(parseInt(num).toString(16))),
+              binary: part.replace(/\d+/g, num => padBinary(parseInt(num).toString(2))),
+              ascii: ''
+            },
+            result: resultValues
+          };
+        }
+        return {
+          input: { decimal: part, hex: '', binary: '', ascii: '' },
+          result: null
+        };
+      }
+
+      // Regular number conversion
+      const num = parseInt(part);
+      if (!isNaN(num)) {
+        const conversion = convertNumber(num);
+        return {
+          input: conversion,
+          result: null
+        };
+      }
+      
+      // Empty part (space) or invalid number
+      return {
+        input: { decimal: part, hex: '', binary: '', ascii: '' },
+        result: null
+      };
     });
 
-    setValues({
+    // Combine all parts, preserving spaces exactly as they appear in the input
+    const combinedValues = {
       decimal: value,
-      hex: conversions.map(n => n.hex).join(' '),
-      binary: conversions.map(n => n.binary).join(' '),
-      ascii: conversions.filter(n => n.ascii).map(n => n.ascii).join('')
-    });
+      hex: conversions.map(p => p.result ? `${p.input.hex}=${p.result.hex}` : p.input.hex).join(' '),
+      binary: conversions.map(p => p.result ? `${p.input.binary}=${p.result.binary}` : p.input.binary).join(' '),
+      ascii: conversions.filter(p => p.input.ascii).map(p => p.input.ascii).join('')
+    };
+
+    setValues(combinedValues);
   };
 
   const handleHexChange = (value: string) => {
     // Always update the hex field immediately
     setValues({ ...values, hex: value });
 
-    // Check for calculation first
-    const cleanedValue = value.replace(/0x/g, ''); // Remove all 0x prefixes for calculation
-    const result = evaluateExpression(cleanedValue, 16);
-    if (result !== null && /[+\-*/%&|^~<>]/.test(value)) {
-      const resultValues = convertNumber(result);
-      setValues(formatCalculationResult({ 
-        decimal: value.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString()),
-        hex: value.replace(/0x[\da-f]+/gi, num => padHex(parseInt(num, 16).toString(16))),
-        binary: value.replace(/0x[\da-f]+/gi, num => padBinary(parseInt(num, 16).toString(2))),
-        ascii: ''
-      }, resultValues));
-      return;
-    }
-
     // Handle empty input
     if (!value) {
       setValues({ decimal: '', hex: '', binary: '', ascii: '' });
       return;
     }
 
-    // Convert numbers and preserve spaces exactly as they appear
-    const numbers = value.split(' ');
-    const conversions = numbers.map(n => {
-      if (n === '') return { decimal: '', binary: '', ascii: '' }; // Preserve empty strings for consecutive spaces
-      const cleanHex = n.toLowerCase().replace(/^0x/, '');
+    // First check if we have a complete math expression
+    if (/[+\-*/%&|^~<>]/.test(value) && !/\s$/.test(value)) {
+      const cleanedValue = value.replace(/0x/g, '').replace(/\s/g, '');
+      const result = evaluateExpression(cleanedValue, 16);
+      if (result !== null) {
+        const resultValues = convertNumber(result);
+        const input = {
+          decimal: value.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString()),
+          hex: value,
+          binary: value.replace(/0x[\da-f]+/gi, num => padBinary(parseInt(num, 16).toString(2))),
+          ascii: ''
+        };
+        setValues(formatCalculationResult(input, resultValues));
+        return;
+      }
+    }
+
+    // If we get here, either there's no math expression or it's incomplete
+    // Split by spaces and handle each part
+    const parts = value.split(' ');
+    const conversions = parts.map(part => {
+      // Check if this part has a math expression
+      if (/[+\-*/%&|^~<>]/.test(part)) {
+        const cleanedValue = part.replace(/0x/g, '');
+        const result = evaluateExpression(cleanedValue, 16);
+        if (result !== null) {
+          const resultValues = convertNumber(result);
+          return {
+            input: {
+              decimal: part.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString()),
+              hex: part,
+              binary: part.replace(/0x[\da-f]+/gi, num => padBinary(parseInt(num, 16).toString(2))),
+              ascii: ''
+            },
+            result: resultValues
+          };
+        }
+        return {
+          input: { decimal: '', hex: part, binary: '', ascii: '' },
+          result: null
+        };
+      }
+
+      // Regular number conversion
+      const cleanHex = part.toLowerCase().replace(/^0x/, '');
       const num = parseInt(cleanHex, 16);
-      return !isNaN(num) ? convertNumber(num) : { decimal: '', binary: '', ascii: '' };
+      if (!isNaN(num)) {
+        const conversion = convertNumber(num);
+        return {
+          input: {
+            decimal: conversion.decimal,
+            hex: part,
+            binary: conversion.binary,
+            ascii: conversion.ascii
+          },
+          result: null
+        };
+      }
+      
+      // Empty part (space) or invalid number
+      return {
+        input: { decimal: '', hex: part, binary: '', ascii: '' },
+        result: null
+      };
     });
 
-    setValues({
-      decimal: conversions.map(n => n.decimal).join(' '),
+    // Combine all parts, preserving spaces exactly as they appear in the input
+    const combinedValues = {
+      decimal: conversions.map(p => p.result ? `${p.input.decimal}=${p.result.decimal}` : p.input.decimal).join(' '),
       hex: value,
-      binary: conversions.map(n => n.binary).join(' '),
-      ascii: conversions.filter(n => n.ascii).map(n => n.ascii).join('')
-    });
+      binary: conversions.map(p => p.result ? `${p.input.binary}=${p.result.binary}` : p.input.binary).join(' '),
+      ascii: conversions.filter(p => p.input.ascii).map(p => p.input.ascii).join('')
+    };
+
+    setValues(combinedValues);
   };
 
   const handleBinaryChange = (value: string) => {
     // Always update the binary field immediately
     setValues({ ...values, binary: value });
 
-    // Check for calculation first
-    const result = evaluateExpression(value, 2);
-    if (result !== null && /[+\-*/%&|^~<>]/.test(value)) {
-      const resultValues = convertNumber(result);
-      setValues(formatCalculationResult({ 
-        decimal: value.replace(/[01]+/g, num => parseInt(num, 2).toString()),
-        hex: value.replace(/[01]+/g, num => '0x' + parseInt(num, 2).toString(16).toUpperCase()),
-        binary: value.replace(/[01]+/g, num => padBinary(parseInt(num, 2).toString(2))),
-        ascii: ''
-      }, resultValues));
-      return;
-    }
-
     // Handle empty input
     if (!value) {
       setValues({ decimal: '', hex: '', binary: '', ascii: '' });
       return;
     }
 
-    // Convert numbers and preserve spaces exactly as they appear
-    const numbers = value.split(' ');
-    const conversions = numbers.map(n => {
-      if (n === '') return { decimal: '', hex: '', ascii: '' }; // Preserve empty strings for consecutive spaces
-      const num = parseInt(n, 2);
-      return !isNaN(num) ? convertNumber(num) : { decimal: '', hex: '', ascii: '' };
+    // First check if we have a complete math expression
+    if (/[+\-*/%&|^~<>]/.test(value) && !/\s$/.test(value)) {
+      const result = evaluateExpression(value.replace(/\s/g, ''), 2);
+      if (result !== null) {
+        const resultValues = convertNumber(result);
+        const input = {
+          decimal: value.replace(/[01]+/g, num => parseInt(num, 2).toString()),
+          hex: value.replace(/[01]+/g, num => padHex(parseInt(num, 2).toString(16))),
+          binary: value,
+          ascii: ''
+        };
+        setValues(formatCalculationResult(input, resultValues));
+        return;
+      }
+    }
+
+    // If we get here, either there's no math expression or it's incomplete
+    // Split by spaces and handle each part
+    const parts = value.split(' ');
+    const conversions = parts.map(part => {
+      // Check if this part has a math expression
+      if (/[+\-*/%&|^~<>]/.test(part)) {
+        const result = evaluateExpression(part, 2);
+        if (result !== null) {
+          const resultValues = convertNumber(result);
+          return {
+            input: {
+              decimal: part.replace(/[01]+/g, num => parseInt(num, 2).toString()),
+              hex: part.replace(/[01]+/g, num => padHex(parseInt(num, 2).toString(16))),
+              binary: part,
+              ascii: ''
+            },
+            result: resultValues
+          };
+        }
+        return {
+          input: { decimal: '', hex: '', binary: part, ascii: '' },
+          result: null
+        };
+      }
+
+      // Regular number conversion
+      const num = parseInt(part, 2);
+      if (!isNaN(num)) {
+        const conversion = convertNumber(num);
+        return {
+          input: {
+            decimal: conversion.decimal,
+            hex: conversion.hex,
+            binary: part,
+            ascii: conversion.ascii
+          },
+          result: null
+        };
+      }
+      
+      // Empty part (space) or invalid number
+      return {
+        input: { decimal: '', hex: '', binary: part, ascii: '' },
+        result: null
+      };
     });
 
-    setValues({
-      decimal: conversions.map(n => n.decimal).join(' '),
-      hex: conversions.map(n => n.hex).join(' '),
+    // Combine all parts, preserving spaces exactly as they appear in the input
+    const combinedValues = {
+      decimal: conversions.map(p => p.result ? `${p.input.decimal}=${p.result.decimal}` : p.input.decimal).join(' '),
+      hex: conversions.map(p => p.result ? `${p.input.hex}=${p.result.hex}` : p.input.hex).join(' '),
       binary: value,
-      ascii: conversions.filter(n => n.ascii).map(n => n.ascii).join('')
-    });
+      ascii: conversions.filter(p => p.input.ascii).map(p => p.input.ascii).join('')
+    };
+
+    setValues(combinedValues);
   };
 
   const handleAsciiChange = (value: string) => {

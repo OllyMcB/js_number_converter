@@ -47,44 +47,46 @@ export const NumberInput: React.FC<Props> = ({
     onMouseMove(position)
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => 
+  {
+    console.log('NumberInput change event value:', e.target.value);
+    onChange(e.target.value)
+  }
+
+  // Split into input and result parts if there's a calculation
+  const parts = value.split('=')
+  const input = parts[0]
+  const result = parts[1]?.trim()
+  
+  console.log('NumberInput split parts:', { input, result });
+
   const renderCharacters = () => 
   {
-    if (!value) 
+    if (!input) 
     {
       return <span className={styles.placeholder}>{placeholder}</span>
     }
 
-    // Split into input and result parts if there's a calculation
-    const parts = value.split('=')
-    const input = parts[0].trim()
-    const result = parts[1]?.trim()
+    const chars = input.split('')
+    console.log('NumberInput rendering characters:', chars);
+    
+    return chars.map((char, i) => 
+    {
+      const highlight = highlights.find(h => i >= h.start && i < h.end)
+      const style = highlight ? { color: highlight.color } : undefined
 
-    return (
-      <>
-        {input.split('').map((char, i) => 
-        {
-          const highlight = highlights.find(h => i >= h.start && i < h.end)
-          const style = highlight ? { color: highlight.color } : undefined
-
-          return (
-            <span
-              key={i}
-              className={styles.character}
-              style={style}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={onMouseLeave}
-            >
-              {char}
-            </span>
-          )
-        })}
-        {result && (
-          <span className={styles.result}>
-            = {result}
-          </span>
-        )}
-      </>
-    )
+      return (
+        <span
+          key={i}
+          className={styles.character}
+          style={style}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={onMouseLeave}
+        >
+          {char}
+        </span>
+      )
+    })
   }
 
   return (
@@ -95,12 +97,23 @@ export const NumberInput: React.FC<Props> = ({
           <input
             ref={inputRef}
             type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
+            value={input}
+            onChange={handleChange}
             className={styles.hiddenInput}
             placeholder={placeholder}
           />
-          <div className={styles.characters}>{renderCharacters()}</div>
+          <div className={styles.characters}>
+            <div className={styles.content}>
+              <div className={styles.input}>
+                {renderCharacters()}
+              </div>
+              {result && (
+                <div className={styles.result}>
+                  = {result}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
