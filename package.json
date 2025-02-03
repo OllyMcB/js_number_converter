@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "homepage": "https://olly.github.io/js_number_converter",
+  "homepage": "https://numberconverter.dev",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

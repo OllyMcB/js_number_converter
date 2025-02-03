@@ -47,37 +47,27 @@ export const NumberInput: React.FC<Props> = ({
     onMouseMove(position)
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => 
-  {
-    console.log('NumberInput change event value:', e.target.value);
-    onChange(e.target.value)
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
 
-  // Split into input and result parts if there's a calculation
-  const parts = value.split('=')
-  const input = parts[0]
-  const result = parts[1]?.trim()
-  
-  console.log('NumberInput split parts:', { input, result });
+  const parts = value.split('=');
+  const input = parts[0];
+  const result = parts[1]?.trim();
 
-  const renderCharacters = () => 
-  {
-    if (!input) 
-    {
-      return <span className={styles.placeholder}>{placeholder}</span>
+  const renderCharacters = () => {
+    if (!input) {
+      return <span className={styles.placeholder}>{placeholder}</span>;
     }
 
-    const chars = input.split('')
-    console.log('NumberInput rendering characters:', chars);
-    
-    return chars.map((char, i) => 
-    {
-      const highlight = highlights.find(h => i >= h.start && i < h.end)
-      const style = highlight ? { color: highlight.color } : undefined
+    const chars = input.split('');
+    return chars.map((char, index) => {
+      const highlight = highlights.find(h => index >= h.start && index < h.end);
+      const style = highlight ? { color: highlight.color } : undefined;
 
       return (
         <span
-          key={i}
+          key={index}
           className={styles.character}
           style={style}
           onMouseMove={handleMouseMove}
@@ -85,9 +75,9 @@ export const NumberInput: React.FC<Props> = ({
         >
           {char}
         </span>
-      )
-    })
-  }
+      );
+    });
+  };
 
   return (
     <div className={styles.container}>

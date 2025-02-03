@@ -49,7 +49,20 @@ function App() {
     ascii: ''
   });
   const [highlight, setHighlight] = useState<HighlightInfo | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => 
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDarkMode(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   // Calculate highlights for each input type based on hover
   const getHighlights = (type: 'decimal' | 'hex' | 'binary' | 'ascii'): NumberInputHighlight[] => {
@@ -255,8 +268,6 @@ function App() {
 
   const evaluateExpression = (expression: string, base: number = 10): number | null => {
     try {
-      console.log('Evaluating expression:', expression);
-      
       // First check if we actually have an operator
       const hasOperator = /[+\-*/%&|^~<>]/.test(expression);
       if (!hasOperator) {
@@ -278,8 +289,6 @@ function App() {
             .trim()
         )
         .filter(t => t !== '');
-
-      console.log('Tokens after split:', tokens);
       
       // Handle unary operators first
       const processedTokens = tokens.map((token, i) => {
@@ -318,23 +327,19 @@ function App() {
       }
       
       return result;
-    } catch (error) {
-      console.error('Error in evaluateExpression:', error);
+    } catch {
       return null;
     }
   };
 
   const formatCalculationResult = (input: NumberValues, result: NumberValues): NumberValues => {
-    console.log('Input before format:', input);
     // Remove any trailing spaces before adding the equals sign
-    const formatted = {
+    return {
       decimal: `${input.decimal.trimEnd()}=${result.decimal}`,
       hex: `${input.hex.trimEnd()}=${result.hex}`,
       binary: `${input.binary.trimEnd()}=${result.binary}`,
       ascii: result.ascii
     };
-    console.log('Output after format:', formatted);
-    return formatted;
   };
 
   /**
@@ -361,8 +366,6 @@ function App() {
   };
 
   const handleDecimalChange = (value: string) => {
-    console.log('Decimal input:', value);
-    
     // Always update the decimal field immediately
     setValues({ ...values, decimal: value });
 
