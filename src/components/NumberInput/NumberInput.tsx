@@ -93,13 +93,17 @@ export const NumberInput = ({
   const result = parts[1]?.trim();
   const hasCalculation = value.includes('=') && /[+\-*/%&|^~<>]/.test(input);
 
+  // Check if there's a trailing operator
+  const hasTrailingOperator = /[+\-*/%&|^~<>]\s*$/.test(input);
+  const trailingOperator = hasTrailingOperator ? input.match(/([+\-*/%&|^~<>]\s*)$/)?.[1] : '';
+
   const renderCharacters = () => {
     if (!input && !result) return null;
 
     const allChars: JSX.Element[] = [];
     
     // Add input characters
-    input.split('').forEach((char, index) => {
+    (type === 'decimal' ? input : input.replace(/[+\-*/%&|^~<>]\s*$/, '') + trailingOperator).split('').forEach((char, index) => {
       const isHighlighted = highlights.some(h => {
         // For hex, we need to match the actual number part (after 0x)
         if (type === 'hex' && h.start === 0) {
