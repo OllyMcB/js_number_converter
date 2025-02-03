@@ -113,10 +113,11 @@
 }
 
 [data-theme="dark"] {
-  --bg-gradient-from: #222222;
-  --bg-gradient-to: #2a2a2a;
+  --bg-gradient-from: rgb(2, 9, 18);
+  --bg-gradient-to: rgb(23, 33, 44);
   --text-primary: #FFFFFF;
-  --bg-card: rgba(34, 34, 34, 0.5);
+  --bg-card: rgba(2, 9, 18, 0.5);
+  --bg-input: rgba(2, 9, 18, 0.3);
   --border-color: rgba(255, 255, 255, 0.1);
   --hover-bg: rgba(255, 255, 255, 0.1);
 } 
