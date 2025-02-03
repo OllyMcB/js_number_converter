@@ -5,6 +5,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { Tooltip, IconButton } from '@mui/material'
+import { trackEvent } from './analytics'
 import './App.scss'
 
 interface NumberValues {
@@ -363,6 +364,11 @@ function App() {
   };
 
   const handleDecimalChange = (value: string) => {
+    // Track decimal input
+    if (value) {
+      trackEvent('Input', 'Decimal Change', value)
+    }
+    
     // Always update the decimal field immediately
     setValues({ ...values, decimal: value });
 
@@ -442,6 +448,11 @@ function App() {
   };
 
   const handleHexChange = (value: string) => {
+    // Track hex input
+    if (value) {
+      trackEvent('Input', 'Hex Change', value)
+    }
+    
     // Always update the hex field immediately
     setValues({ ...values, hex: value });
 
@@ -529,6 +540,11 @@ function App() {
   };
 
   const handleBinaryChange = (value: string) => {
+    // Track binary input
+    if (value) {
+      trackEvent('Input', 'Binary Change', value)
+    }
+    
     // Always update the binary field immediately
     setValues({ ...values, binary: value });
 
@@ -613,6 +629,11 @@ function App() {
   };
 
   const handleAsciiChange = (value: string) => {
+    // Track ASCII input
+    if (value) {
+      trackEvent('Input', 'ASCII Change', value)
+    }
+    
     if (value === '') {
       setValues({ decimal: '', hex: '', binary: '', ascii: '' })
       return
@@ -636,8 +657,10 @@ function App() {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
-  const clearValues = () => 
-  {
+  const clearValues = () => {
+    // Track clear action
+    trackEvent('Action', 'Clear Values')
+    
     setValues({
       decimal: '',
       hex: '',
@@ -645,6 +668,12 @@ function App() {
       ascii: ''
     });
   };
+
+  // Track theme changes
+  const handleThemeChange = () => {
+    trackEvent('Settings', 'Theme Change', darkMode ? 'Light' : 'Dark')
+    setDarkMode(!darkMode)
+  }
 
   return (
     <div className="app">
@@ -697,7 +726,7 @@ function App() {
         <div className="controls">
           <button 
             className="control-button"
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={handleThemeChange}
             aria-label="Toggle theme"
           >
             {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
@@ -705,6 +734,7 @@ function App() {
           <Tooltip 
             title={<pre style={{ margin: 0, fontFamily: 'inherit' }}>{HELP_TEXT}</pre>} 
             placement="top"
+            onOpen={() => trackEvent('Help', 'View Help Text')}
           >
             <IconButton className="control-button" size="small">
               <HelpOutlineIcon />
