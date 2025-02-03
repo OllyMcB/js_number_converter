@@ -1,21 +1,8 @@
 import { useState, useEffect } from 'react'
-import { 
-  Container, 
-  Paper, 
-  IconButton, 
-  Typography, 
-  Box,
-  ThemeProvider,
-  CssBaseline,
-  useTheme,
-  Tooltip
-} from '@mui/material'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
-import SettingsIcon from '@mui/icons-material/Settings'
+import { NumberInput } from './components/NumberInput/NumberInput'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
-import { NumberInput } from './components/NumberInput/NumberInput'
-import { lightTheme, darkTheme } from './theme'
+import { TrashIcon } from './components/Icons/TrashIcon'
 import './App.scss'
 
 interface NumberValues {
@@ -63,7 +50,6 @@ function App() {
   });
   const [highlight, setHighlight] = useState<HighlightInfo | null>(null);
   const [darkMode, setDarkMode] = useState(false);
-  const theme = useTheme();
 
   // Calculate highlights for each input type based on hover
   const getHighlights = (type: 'decimal' | 'hex' | 'binary' | 'ascii'): NumberInputHighlight[] => {
@@ -422,103 +408,86 @@ function App() {
     })
   }
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
+  const clearValues = () => 
+  {
+    setValues({
+      decimal: '',
+      hex: '',
+      binary: '',
+      ascii: ''
+    });
+  };
+
   return (
-    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-      <CssBaseline />
-      <Box sx={{ 
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        transition: 'all 0.3s ease',
-        padding: '2rem 0'
-      }}>
-        <Container maxWidth="md" className="app">
-          <Typography 
-            variant="h3" 
-            component="h1" 
-            gutterBottom 
-            align="center"
-            sx={{ color: 'text.primary', mb: 4 }}
+    <div className="app">
+      <div className="converter">
+        <h1 className="title">Number Converter</h1>
+        
+        <div className="input-group">
+          <NumberInput
+            label="Decimal"
+            value={values.decimal}
+            placeholder="Enter decimal"
+            onChange={handleDecimalChange}
+            type="decimal"
+            highlights={getHighlights('decimal')}
+            onMouseMove={(pos) => handleMouseMove('decimal', pos)}
+            onMouseLeave={handleMouseLeave}
+          />
+          <NumberInput
+            label="Hexadecimal"
+            value={values.hex}
+            placeholder="Enter hexadecimal"
+            onChange={handleHexChange}
+            type="hex"
+            highlights={getHighlights('hex')}
+            onMouseMove={(pos) => handleMouseMove('hex', pos)}
+            onMouseLeave={handleMouseLeave}
+          />
+          <NumberInput
+            label="Binary"
+            value={values.binary}
+            placeholder="Enter binary"
+            onChange={handleBinaryChange}
+            type="binary"
+            highlights={getHighlights('binary')}
+            onMouseMove={(pos) => handleMouseMove('binary', pos)}
+            onMouseLeave={handleMouseLeave}
+          />
+          <NumberInput
+            label="ASCII"
+            value={values.ascii}
+            placeholder="Enter ascii"
+            onChange={handleAsciiChange}
+            type="ascii"
+            highlights={getHighlights('ascii')}
+            onMouseMove={(pos) => handleMouseMove('ascii', pos)}
+            onMouseLeave={handleMouseLeave}
+          />
+        </div>
+
+        <div className="controls">
+          <button 
+            className="theme-toggle"
+            onClick={() => setDarkMode(!darkMode)}
+            aria-label="Toggle theme"
           >
-            Number Converter
-          </Typography>
-          <Paper 
-            elevation={0} 
-            className="converter"
-            sx={{ 
-              bgcolor: 'background.paper',
-              borderRadius: 3,
-              overflow: 'hidden',
-              position: 'relative'
-            }}
+            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </button>
+          <button 
+            className="trash-button"
+            onClick={clearValues}
+            aria-label="Clear all values"
           >
-            <Box sx={{ p: 3, pb: 1 }}>
-              <NumberInput
-                label="Decimal"
-                value={values.decimal}
-                placeholder="Enter decimal number(s)"
-                onChange={handleDecimalChange}
-                type="decimal"
-                highlights={getHighlights('decimal')}
-                onMouseMove={(pos) => handleMouseMove('decimal', pos)}
-                onMouseLeave={handleMouseLeave}
-              />
-              <NumberInput
-                label="Hex"
-                value={values.hex}
-                placeholder="Enter hex number(s)"
-                onChange={handleHexChange}
-                type="hex"
-                highlights={getHighlights('hex')}
-                onMouseMove={(pos) => handleMouseMove('hex', pos)}
-                onMouseLeave={handleMouseLeave}
-              />
-              <NumberInput
-                label="Binary"
-                value={values.binary}
-                placeholder="Enter binary number(s)"
-                onChange={handleBinaryChange}
-                type="binary"
-                highlights={getHighlights('binary')}
-                onMouseMove={(pos) => handleMouseMove('binary', pos)}
-                onMouseLeave={handleMouseLeave}
-              />
-              <NumberInput
-                label="ASCII"
-                value={values.ascii}
-                placeholder="Enter ASCII character(s)"
-                onChange={handleAsciiChange}
-                type="ascii"
-                highlights={getHighlights('ascii')}
-                onMouseMove={(pos) => handleMouseMove('ascii', pos)}
-                onMouseLeave={handleMouseLeave}
-              />
-            </Box>
-            <Box className="controls">
-              <Tooltip 
-                title={HELP_TEXT} 
-                arrow 
-                placement="top"
-                enterDelay={200}
-                leaveDelay={200}
-              >
-                <IconButton className="help" size="large">
-                  <HelpOutlineIcon />
-                </IconButton>
-              </Tooltip>
-              <IconButton size="large">
-                <SettingsIcon />
-              </IconButton>
-              <IconButton 
-                onClick={() => setDarkMode(!darkMode)} 
-                size="large"
-              >
-                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-              </IconButton>
-            </Box>
-          </Paper>
-        </Container>
-      </Box>
-    </ThemeProvider>
+            <TrashIcon />
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
