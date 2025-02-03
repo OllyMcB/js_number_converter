@@ -64,7 +64,7 @@ export const NumberInput: React.FC<Props> = ({
         {input.split('').map((char, i) => 
         {
           const highlight = highlights.find(h => i >= h.start && i < h.end)
-          const style = highlight ? { backgroundColor: highlight.color } : undefined
+          const style = highlight ? { color: highlight.color } : undefined
 
           return (
             <span
