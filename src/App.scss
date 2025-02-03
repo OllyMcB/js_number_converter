@@ -22,11 +22,28 @@
   gap: 1.5rem;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 .title {
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin: 0;
   color: var(--text-primary);
+}
+
+.help-button {
+  color: var(--text-primary);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .input-group {
@@ -45,9 +62,44 @@
 .controls {
   display: flex;
   justify-content: center;
-  gap: 2rem;
+  gap: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
+}
+
+.control-button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem !important;
+  border-radius: 8px !important;
+  border: none;
+  background: transparent;
+  color: var(--text-primary) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 42px !important;
+  min-height: 42px !important;
+
+  &:hover {
+    background-color: var(--hover-bg) !important;
+  }
+
+  svg {
+    width: 24px !important;
+    height: 24px !important;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    stroke-width: 2;
+  }
+
+  &:hover svg {
+    opacity: 1;
+  }
+
+  &.trash-button:hover {
+    background-color: var(--destructive-hover) !important;
+  }
 }
 
 .theme-toggle {
