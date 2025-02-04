@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react'
 import { NumberInput } from './components/NumberInput/NumberInput'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import { Tooltip, IconButton } from '@mui/material'
 import { trackEvent } from './analytics'
 import './App.scss'
 
@@ -32,12 +30,8 @@ interface CalculationResult {
   result: NumberValues
 }
 
-const HELP_TEXT = `Operators:
-• + - * / % (arithmetic)
-• & | ^ ~ (bitwise)
-• << >> (shift)
-
-Hover over numbers to see bit patterns`;
+const HOVER_TEXT = 'Hover over numbers to see corresponding bit patterns'
+const OPERATORS_TEXT = 'Operators: + - * / % (arithmetic) & | ^ ~ (bitwise) << >> (shift)'
 
 function App() {
   const [values, setValues] = useState<NumberValues>({
@@ -731,15 +725,6 @@ function App() {
           >
             {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
           </button>
-          <Tooltip 
-            title={<pre style={{ margin: 0, fontFamily: 'inherit' }}>{HELP_TEXT}</pre>} 
-            placement="top"
-            onOpen={() => trackEvent('Help', 'View Help Text')}
-          >
-            <IconButton className="control-button" size="small">
-              <HelpOutlineIcon />
-            </IconButton>
-          </Tooltip>
           <button 
             className="control-button trash-button"
             onClick={clearValues}
@@ -748,6 +733,11 @@ function App() {
             <DeleteOutlineIcon />
           </button>
         </div>
+      </div>
+
+      <div className="help-text">
+        <span>{HOVER_TEXT}</span>
+        <span>{OPERATORS_TEXT}</span>
       </div>
     </div>
   )
