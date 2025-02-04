@@ -266,55 +266,85 @@ function App() {
         return null;
       }
 
-      // First handle shift operators as they're two characters
-      const shiftReplaced = expression
-        .replace(/>>/g, '\u0001') // Use special characters as temporary replacements
-        .replace(/<</g, '\u0002');
+      // Convert input number to binary for bitwise operations
+      const toBinary = (num: number): string => {
+        // Use 32 bits for consistency with JavaScript bitwise operations
+        return num.toString(2).padStart(32, '0');
+      };
+
+      // Handle unary NOT (~) operator first
+      if (expression.startsWith('~')) {
+        const num = parseInt(expression.slice(1), base);
+        if (isNaN(num)) return null;
+        
+        // Convert to binary, perform NOT, and convert back
+        const binary = toBinary(num);
+        const inverted = binary.split('').map(bit => bit === '0' ? '1' : '0').join('');
+        return parseInt(inverted, 2);
+      }
+
+      // Handle shift operators
+      const shiftMatch = expression.match(/^(\d+)\s*([<>]{2})\s*(\d+)$/);
+      if (shiftMatch) {
+        const [_, leftNum, operator, rightNum] = shiftMatch;
+        const left = parseInt(leftNum, base);
+        const right = parseInt(rightNum, base);
+        if (isNaN(left) || isNaN(right)) return null;
+        
+        if (operator === '<<') return left << right;
+        if (operator === '>>') return left >> right;
+      }
 
       // Now split by single operators while preserving them
-      const tokens = shiftReplaced
-        .split(/([+\-*/%&|^~])/)
-        .map(token => 
-          token
-            .replace('\u0001', '>>')
-            .replace('\u0002', '<<')
-            .trim()
-        )
+      const tokens = expression
+        .split(/([+\-*/%&|^])/)
+        .map(token => token.trim())
         .filter(t => t !== '');
       
-      // Handle unary operators first
-      const processedTokens = tokens.map((token, i) => {
-        if (token === '~') {
-          const nextNum = parseInt(tokens[i + 1], base);
-          if (isNaN(nextNum)) return '';
-          tokens[i + 1] = ''; // Clear the next token as it's been used
-          return (~nextNum).toString();
-        }
-        return token;
-      }).filter(t => t !== '');
-
       // Now evaluate the expression
-      let result = parseInt(processedTokens[0], base);
+      let result = parseInt(tokens[0], base);
       if (isNaN(result)) return null;
 
-      for (let i = 1; i < processedTokens.length; i += 2) {
-        const operator = processedTokens[i];
-        const nextNum = parseInt(processedTokens[i + 1], base);
+      for (let i = 1; i < tokens.length; i += 2) {
+        const operator = tokens[i];
+        const nextNum = parseInt(tokens[i + 1], base);
         
         if (isNaN(nextNum)) return null;
 
-        switch (operator) {
-          case '+': result += nextNum; break;
-          case '-': result -= nextNum; break;
-          case '*': result *= nextNum; break;
-          case '/': result = Math.floor(result / nextNum); break;
-          case '%': result %= nextNum; break;
-          case '&': result &= nextNum; break;
-          case '|': result |= nextNum; break;
-          case '^': result ^= nextNum; break;
-          case '<<': result <<= nextNum; break;
-          case '>>': result >>= nextNum; break;
-          default: return null;
+        // Handle bitwise operations in binary
+        if (['&', '|', '^'].includes(operator)) {
+          const leftBinary = toBinary(result);
+          const rightBinary = toBinary(nextNum);
+          let resultBinary = '';
+
+          switch (operator) {
+            case '&':
+              resultBinary = leftBinary.split('').map((bit, i) => 
+                bit === '1' && rightBinary[i] === '1' ? '1' : '0'
+              ).join('');
+              break;
+            case '|':
+              resultBinary = leftBinary.split('').map((bit, i) => 
+                bit === '1' || rightBinary[i] === '1' ? '1' : '0'
+              ).join('');
+              break;
+            case '^':
+              resultBinary = leftBinary.split('').map((bit, i) => 
+                bit !== rightBinary[i] ? '1' : '0'
+              ).join('');
+              break;
+          }
+          result = parseInt(resultBinary, 2);
+        } else {
+          // Handle arithmetic operations normally
+          switch (operator) {
+            case '+': result += nextNum; break;
+            case '-': result -= nextNum; break;
+            case '*': result *= nextNum; break;
+            case '/': result = Math.floor(result / nextNum); break;
+            case '%': result %= nextNum; break;
+            default: return null;
+          }
         }
       }
       
@@ -343,13 +373,20 @@ function App() {
     
     // Must end with a number
     if (!/\d$/.test(value)) return false;
+
+    // Special case for unary operator ~
+    if (value.startsWith('~')) {
+      return /^~\d+$/.test(value);
+    }
+
+    // Check for shift operators
+    if (/<{2}|>{2}/.test(value)) {
+      return /^\d+\s*([<>]{2})\s*\d+$/.test(value);
+    }
     
     // For expressions with binary operators, must have numbers on both sides
-    const parts = value.split(/([+\-*/%&|^<>])/).filter(Boolean);
+    const parts = value.split(/([+\-*/%&|^])/).filter(Boolean);
     if (parts.length < 2) return false;
-    
-    // Special case for unary operator ~
-    if (parts[0] === '~') return /^\d+$/.test(parts[1]);
     
     // For binary operators, check both sides are numbers
     const firstPart = parts[0];
