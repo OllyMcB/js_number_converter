@@ -711,7 +711,7 @@ function App() {
   return (
     <div className="app">
       <div className="converter">
-        <h1 className="title">Number Converter</h1>
+        <h1 className="title">numberconverter.dev</h1>
         
         <div className="input-group">
           <NumberInput
