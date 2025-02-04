@@ -40,7 +40,8 @@
   outline: none;
   transition: all 0.2s ease;
   color: transparent;
-  caret-color: var(--text-primary);
+  cursor: text;
+  z-index: 1;
 
   &::placeholder {
     color: transparent;
@@ -61,14 +62,13 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   line-height: 1.5;
-  pointer-events: none;
   white-space: pre;
-  z-index: 1;
   color: var(--text-primary);
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
+  z-index: 2;
 
   &::-webkit-scrollbar {
     height: 6px;
@@ -99,10 +99,11 @@
 
 .character {
   display: inline-block;
-  pointer-events: all;
   transition: color 0.15s ease;
   padding: 0 2px;
   margin: 0 -2px;
+  position: relative;
+  pointer-events: all;
 }
 
 .placeholder {

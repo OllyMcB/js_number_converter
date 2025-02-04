@@ -79,6 +79,21 @@ export const NumberInput: React.FC<Props> = ({
     });
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (inputRef.current) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const charWidth = 8.4; // Approximate width of a character in the monospace font
+      const clickedPosition = Math.floor((x - 20) / charWidth); // 20px for padding
+      
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(
+        Math.max(0, Math.min(clickedPosition, input.length)),
+        Math.max(0, Math.min(clickedPosition, input.length))
+      );
+    }
+  };
+
   return (
     <div className={styles.container}>
       <label className={styles.label}>{label}</label>
@@ -91,8 +106,12 @@ export const NumberInput: React.FC<Props> = ({
             onChange={handleChange}
             className={styles.hiddenInput}
             placeholder={placeholder}
+            style={{ caretColor: 'var(--text-primary)' }}
           />
-          <div className={styles.characters}>
+          <div 
+            className={styles.characters} 
+            onClick={handleClick}
+          >
             <div className={styles.content}>
               <div className={styles.input}>
                 {renderCharacters()}
