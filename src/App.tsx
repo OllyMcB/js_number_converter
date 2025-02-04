@@ -268,8 +268,10 @@ function App() {
 
       // Convert input number to binary for bitwise operations
       const toBinary = (num: number): string => {
-        // Use 32 bits for consistency with JavaScript bitwise operations
-        return num.toString(2).padStart(32, '0');
+        const binary = num.toString(2);
+        // Calculate how many bits we need (round up to nearest 8)
+        const targetLength = Math.ceil(binary.length / 8) * 8;
+        return binary.padStart(targetLength, '0');
       };
 
       // Handle unary NOT (~) operator first
