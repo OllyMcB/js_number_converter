@@ -189,4 +189,55 @@
   --border-color: rgba(255, 255, 255, 0.1);
   --hover-bg: rgba(255, 255, 255, 0.1);
   --text-help: rgb(51, 73, 96);
+}
+
+/* @brief Footer styles for Ko-fi link - now fixed in the bottom right corner */
+.footer {
+  position: fixed;
+  right: 2rem;
+  bottom: 1.5rem;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--text-help);
+  opacity: 0.7;
+  z-index: 100;
+  pointer-events: none; /* Only the link itself should be clickable */
+}
+
+.kofi-link {
+  display: inline-block;
+  background: #f4f4fa;
+  color: #7c5cbf;
+  border-radius: 8px;
+  padding: 0.4em 1em;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1em;
+  box-shadow: 0 1px 4px rgba(111, 66, 193, 0.06);
+  transition: color 0.2s, text-decoration 0.2s, background 0.2s, box-shadow 0.2s;
+  opacity: 0.9;
+  pointer-events: auto;
+}
+
+.kofi-link:hover {
+  color: #fff;
+  background: #7c5cbf;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(111, 66, 193, 0.12);
+}
+
+[data-theme="dark"] .kofi-link {
+  background: #23243a;
+  color: #b6aeea;
+  box-shadow: 0 1px 4px rgba(50, 50, 80, 0.10);
+  opacity: 0.82;
+}
+
+[data-theme="dark"] .kofi-link:hover {
+  background: #3a3760;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(50, 50, 80, 0.16);
 } 

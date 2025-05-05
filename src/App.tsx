@@ -778,6 +778,18 @@ function App() {
         <span>{HOVER_TEXT}</span>
         <span>{OPERATORS_TEXT}</span>
       </div>
+
+      {/* @brief Footer with Ko-fi link */}
+      <footer className="footer">
+        <a
+          href="https://ko-fi.com/olsdev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="kofi-link"
+        >
+          Buy me a Coffee on Ko-fi
+        </a>
+      </footer>
     </div>
   )
 }
