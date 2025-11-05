@@ -231,6 +231,144 @@ function App() {
     return '0x' + finalHex;
   };
 
+  /**
+   * @brief Converts all hex numbers in an expression to decimal
+   * @param expression - The hex expression string
+   * @returns Expression with all hex numbers converted to decimal
+   */
+  const convertHexExpressionToDecimal = (expression: string): string => {
+    // Match hex numbers: either "0x" followed by hex digits, or standalone hex digits
+    // Use word boundaries to avoid matching parts of operators
+    // Pattern: matches 0x[0-9a-fA-F]+ OR [0-9a-fA-F]+ that's not preceded by "0x"
+    // We'll use a more sophisticated approach: match all hex numbers, prioritizing 0x prefix
+    
+    // First, match all 0x prefixed hex numbers
+    const withPrefix = /0x[0-9a-fA-F]+/gi;
+    let match: RegExpExecArray | null;
+    const matches: Array<{ start: number; end: number; value: string; decimal: string }> = [];
+    
+    while ((match = withPrefix.exec(expression)) !== null) {
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        value: match[0],
+        decimal: parseInt(match[0].toLowerCase().replace(/^0x/, ''), 16).toString()
+      });
+    }
+    
+    // Then, find standalone hex digit sequences that aren't part of a 0x number
+    const standalone = /[0-9a-fA-F]+/gi;
+    standalone.lastIndex = 0;
+    
+    while ((match = standalone.exec(expression)) !== null) {
+      // Check if this match is already covered by a 0x match
+      const isCovered = matches.some(m => 
+        match!.index >= m.start && match!.index < m.end
+      );
+      
+      if (!isCovered) {
+        // Check if this is actually a valid hex number (not part of an operator)
+        const before = expression[match.index - 1] || '';
+        const after = expression[match.index + match[0].length] || '';
+        // Only match if it's surrounded by spaces, operators, or start/end
+        const validContext = /^[\s+\-*/%&|^~<>()]?$/.test(before) && 
+                             /^[\s+\-*/%&|^~<>()]?$/.test(after);
+        
+        if (validContext) {
+          matches.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            value: match[0],
+            decimal: parseInt(match[0], 16).toString()
+          });
+        }
+      }
+    }
+    
+    // Sort matches by position and build result
+    matches.sort((a, b) => a.start - b.start);
+    
+    let result = '';
+    let currentIndex = 0;
+    
+    for (const m of matches) {
+      result += expression.substring(currentIndex, m.start);
+      result += m.decimal;
+      currentIndex = m.end;
+    }
+    result += expression.substring(currentIndex);
+    
+    return result;
+  };
+
+  /**
+   * @brief Converts all hex numbers in an expression to binary
+   * @param expression - The hex expression string
+   * @returns Expression with all hex numbers converted to binary
+   */
+  const convertHexExpressionToBinary = (expression: string): string => {
+    // Similar approach to decimal conversion
+    
+    const withPrefix = /0x[0-9a-fA-F]+/gi;
+    let match: RegExpExecArray | null;
+    const matches: Array<{ start: number; end: number; value: string; binary: string }> = [];
+    
+    while ((match = withPrefix.exec(expression)) !== null) {
+      const hexStr = match[0].toLowerCase().replace(/^0x/, '');
+      const decimal = parseInt(hexStr, 16);
+      if (!isNaN(decimal)) {
+        matches.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          value: match[0],
+          binary: padBinary(decimal.toString(2))
+        });
+      }
+    }
+    
+    const standalone = /[0-9a-fA-F]+/gi;
+    standalone.lastIndex = 0;
+    
+    while ((match = standalone.exec(expression)) !== null) {
+      const isCovered = matches.some(m => 
+        match!.index >= m.start && match!.index < m.end
+      );
+      
+      if (!isCovered) {
+        const before = expression[match.index - 1] || '';
+        const after = expression[match.index + match[0].length] || '';
+        const validContext = /^[\s+\-*/%&|^~<>()]?$/.test(before) && 
+                             /^[\s+\-*/%&|^~<>()]?$/.test(after);
+        
+        if (validContext) {
+          const decimal = parseInt(match[0], 16);
+          if (!isNaN(decimal)) {
+            matches.push({
+              start: match.index,
+              end: match.index + match[0].length,
+              value: match[0],
+              binary: padBinary(decimal.toString(2))
+            });
+          }
+        }
+      }
+    }
+    
+    matches.sort((a, b) => a.start - b.start);
+    
+    let result = '';
+    let currentIndex = 0;
+    
+    for (const m of matches) {
+      result += expression.substring(currentIndex, m.start);
+      result += m.binary;
+      currentIndex = m.end;
+    }
+    result += expression.substring(currentIndex);
+    
+    return result;
+  };
+
   const padBinary = (binStr: string): string => {
     // Calculate how many bits we need
     const len = binStr.length;
@@ -459,9 +597,9 @@ function App() {
       if (result !== null) {
         const resultValues = convertNumber(result);
         const input = {
-          decimal: value.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString()),
+          decimal: convertHexExpressionToDecimal(value),
           hex: value,
-          binary: value.replace(/0x[\da-f]+/gi, num => padBinary(parseInt(num, 16).toString(2))),
+          binary: convertHexExpressionToBinary(value),
           ascii: ''
         };
         setValues(formatCalculationResult(input, resultValues));
@@ -481,9 +619,9 @@ function App() {
           const resultValues = convertNumber(result);
           return {
             input: {
-              decimal: part.replace(/0x[\da-f]+/gi, num => parseInt(num, 16).toString()),
+              decimal: convertHexExpressionToDecimal(part),
               hex: part,
-              binary: part.replace(/0x[\da-f]+/gi, num => padBinary(parseInt(num, 16).toString(2))),
+              binary: convertHexExpressionToBinary(part),
               ascii: ''
             },
             result: resultValues
