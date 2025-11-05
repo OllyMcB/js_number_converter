@@ -48,6 +48,41 @@ const findNumberGroupAtPosition = (
 
     // Check if position is within this part (including spaces)
     if (position >= partStart && position < partEnd) {
+      // If the part contains operators, we need to find which number within it contains the position
+      // Check if this part has operators (indicating it's an expression)
+      const hasOperators = /[+\-*/%&|^~<>]/.test(part);
+      
+      if (hasOperators) {
+        // Split the part by operators to find the actual number at the position
+        const relativePosInPart = position - partStart;
+        const operatorPattern = /([+\-*/%&|^~<>]+)/;
+        const tokens = part.split(operatorPattern);
+        let tokenPos = 0;
+        
+        for (const token of tokens) {
+          const tokenStart = tokenPos;
+          const tokenEnd = tokenPos + token.length;
+          
+          // Check if the relative position is within this token
+          if (relativePosInPart >= tokenStart && relativePosInPart < tokenEnd) {
+            // Check if this token is a number (not an operator)
+            const isNumber = !/[+\-*/%&|^~<>]/.test(token);
+            if (isNumber && token.length > 0) {
+              // Found the number at this position
+              return {
+                number: token,
+                start: partStart + tokenStart,
+                end: partStart + tokenEnd,
+                groupIndex: i
+              };
+            }
+          }
+          
+          tokenPos = tokenEnd;
+        }
+      }
+      
+      // No operators or couldn't find specific number in expression - return the whole part
       // Remove prefix if present (e.g., "0x" in hex)
       const numberWithoutPrefix = part.startsWith(prefix) ? part.slice(prefix.length) : part;
       
@@ -200,7 +235,9 @@ export const getHighlights = (
     if (!hexGroup) return [];
 
     // Extract hex digits (remove 0x prefix if present)
-    const hasPrefix = hexGroup.number.toLowerCase().startsWith('0x');
+    // Handle both "0x" prefix and case-insensitive matching
+    const hexNumberLower = hexGroup.number.toLowerCase();
+    const hasPrefix = hexNumberLower.startsWith('0x');
     const hexDigits = hasPrefix 
       ? hexGroup.number.slice(2) 
       : hexGroup.number;
@@ -212,6 +249,7 @@ export const getHighlights = (
     const relativePos = highlight.position - hexGroup.start;
     
     // Only proceed if hovering over actual hex digits (not 0x prefix)
+    // For non-prefixed hex, relativePos can start at 0
     if (relativePos >= prefixLength && relativePos < hexGroup.number.length) {
       const hexDigitIndex = relativePos - prefixLength;
       
