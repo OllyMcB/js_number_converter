@@ -7,5 +7,12 @@ export default defineConfig({
   base: '/',
   build: {
     outDir: 'dist',
-  }
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler', // Use modern Sass API (Vite 5.4+)
+      },
+    },
+  },
 })

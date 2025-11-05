@@ -1,19 +1,20 @@
+// @ts-check
 import eslint from '@eslint/js'
-import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
+/** @type {import('typescript-eslint').Config} */
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: './tsconfig.json',
+        project: ['./tsconfig.app.json'],
       },
     },
     plugins: {
@@ -34,4 +35,14 @@ export default tseslint.config(
     },
   },
   eslintConfigPrettier,
+  {
+    files: ['*.config.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: ['./tsconfig.node.json'],
+      },
+    },
+  },
 )
+

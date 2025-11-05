@@ -26,7 +26,7 @@ export const NumberInput: React.FC<Props> = ({
   value, 
   placeholder, 
   onChange,
-  type,
+  type: _type,
   highlights = [],
   onMouseMove,
   onMouseLeave,
@@ -42,8 +42,16 @@ export const NumberInput: React.FC<Props> = ({
     const parent = target.parentElement
     if (!parent) return
 
-    const text = parent.textContent || ''
-    const position = Array.from(parent.children).indexOf(target)
+    // Calculate actual character position by summing lengths of all previous siblings
+    const siblings = Array.from(parent.children)
+    const targetIndex = siblings.indexOf(target)
+    let position = 0
+    
+    for (let i = 0; i < targetIndex; i++) {
+      const sibling = siblings[i] as HTMLElement
+      position += sibling.textContent?.length || 0
+    }
+    
     onMouseMove(position)
   }
 
