@@ -146,31 +146,45 @@ export const getHighlights = (
     return highlights;
   }
 
-  // Decimal source: Highlight entire strings in all formats
+  // Decimal source: Find the specific number group and highlight corresponding groups
   if (highlight.sourceType === 'decimal') {
-    if (type === 'decimal' && values.decimal) {
-      // Highlight entire decimal string
+    const decimalGroup = findNumberGroupAtPosition(values.decimal, highlight.position);
+    if (!decimalGroup) return [];
+
+    // For decimal field: highlight the entire decimal group
+    if (type === 'decimal') {
       highlights.push({
-        start: 0,
-        end: values.decimal.length,
+        start: decimalGroup.start,
+        end: decimalGroup.end,
         color: '#ff3399'
       });
-    } else if (type === 'hex' && values.hex) {
-      // Highlight entire hex string
-      highlights.push({
-        start: 0,
-        end: values.hex.length,
-        color: '#ff3399'
-      });
-    } else if (type === 'binary' && values.binary) {
-      // Highlight entire binary string
-      highlights.push({
-        start: 0,
-        end: values.binary.length,
-        color: '#ff3399'
-      });
-    } else if (type === 'ascii' && values.ascii) {
-      // Highlight entire ASCII string
+    }
+    // For hex field: highlight the entire hex group at the same index
+    else if (type === 'hex' && values.hex) {
+      const hexGroups = getAllGroups(values.hex);
+      if (hexGroups[decimalGroup.groupIndex]) {
+        const hexGroup = hexGroups[decimalGroup.groupIndex];
+        highlights.push({
+          start: hexGroup.start,
+          end: hexGroup.end,
+          color: '#ff3399'
+        });
+      }
+    }
+    // For binary field: highlight the entire binary group at the same index
+    else if (type === 'binary' && values.binary) {
+      const binaryGroups = getAllGroups(values.binary);
+      if (binaryGroups[decimalGroup.groupIndex]) {
+        const binaryGroup = binaryGroups[decimalGroup.groupIndex];
+        highlights.push({
+          start: binaryGroup.start,
+          end: binaryGroup.end,
+          color: '#ff3399'
+        });
+      }
+    }
+    // For ASCII field: highlight the entire ASCII string
+    else if (type === 'ascii' && values.ascii) {
       highlights.push({
         start: 0,
         end: values.ascii.length,
@@ -182,21 +196,28 @@ export const getHighlights = (
 
   // Hex source: Find the specific number group and hex digit
   if (highlight.sourceType === 'hex') {
-    const hexGroup = findNumberGroupAtPosition(values.hex, highlight.position, '0x');
+    const hexGroup = findNumberGroupAtPosition(values.hex, highlight.position);
     if (!hexGroup) return [];
 
-    // Extract hex digits (remove 0x prefix)
-    const hexDigits = hexGroup.number.startsWith('0x') 
+    // Extract hex digits (remove 0x prefix if present)
+    const hasPrefix = hexGroup.number.toLowerCase().startsWith('0x');
+    const hexDigits = hasPrefix 
       ? hexGroup.number.slice(2) 
       : hexGroup.number;
     
+    if (hexDigits.length === 0) return [];
+    
     // Calculate relative position within the hex number (accounting for 0x prefix)
-    const prefixLength = hexGroup.number.startsWith('0x') ? 2 : 0;
+    const prefixLength = hasPrefix ? 2 : 0;
     const relativePos = highlight.position - hexGroup.start;
     
     // Only proceed if hovering over actual hex digits (not 0x prefix)
     if (relativePos >= prefixLength && relativePos < hexGroup.number.length) {
       const hexDigitIndex = relativePos - prefixLength;
+      
+      // Ensure hexDigitIndex is valid
+      if (hexDigitIndex < 0 || hexDigitIndex >= hexDigits.length) return [];
+      
       const hexDigit = hexDigits[hexDigitIndex];
       
       if (!hexDigit) return [];
@@ -285,13 +306,14 @@ export const getHighlights = (
       const hexGroups = getAllGroups(values.hex);
       if (hexGroups[binaryGroup.groupIndex]) {
         const hexGroup = hexGroups[binaryGroup.groupIndex];
-        const hexDigits = hexGroup.number.startsWith('0x') 
+        const hasPrefix = hexGroup.number.toLowerCase().startsWith('0x');
+        const hexDigits = hasPrefix 
           ? hexGroup.number.slice(2) 
           : hexGroup.number;
         
         // The groupIndex corresponds to which hex digit
-        if (groupIndex < hexDigits.length) {
-          const prefixLength = hexGroup.number.startsWith('0x') ? 2 : 0;
+        if (groupIndex >= 0 && groupIndex < hexDigits.length) {
+          const prefixLength = hasPrefix ? 2 : 0;
           highlights.push({
             start: hexGroup.start + prefixLength + groupIndex,
             end: hexGroup.start + prefixLength + groupIndex + 1,
