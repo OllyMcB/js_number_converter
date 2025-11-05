@@ -24,6 +24,8 @@
   display: flex;
   height: 100%;
   cursor: text;
+  border-radius: 0.5rem;
+  overflow: hidden; // Clip selection to rounded corners
 }
 
 .hiddenInput {
@@ -52,6 +54,17 @@
     box-shadow: 0 0 0 2px var(--primary-ring);
     border-color: var(--primary-ring);
   }
+
+  // Style text selection to match the rounded container
+  &::selection {
+    background-color: rgba(25, 118, 210, 0.3);
+    color: var(--text-primary);
+  }
+
+  &::-moz-selection {
+    background-color: rgba(25, 118, 210, 0.3);
+    color: var(--text-primary);
+  }
 }
 
 .characters {
@@ -71,6 +84,7 @@
   scrollbar-color: var(--scrollbar-thumb) transparent;
   z-index: 2;
   pointer-events: auto;
+  border-radius: 0.5rem; // Match input border radius
 
   &::-webkit-scrollbar {
     height: 6px;
