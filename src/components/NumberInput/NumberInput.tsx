@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import styles from './NumberInput.module.scss'
 
 interface NumberInputHighlight {
@@ -33,10 +33,60 @@ export const NumberInput: React.FC<Props> = ({
 }) => 
 {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [isSelecting, setIsSelecting] = useState(false)
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLSpanElement>) => 
-  {
+  // Handle keyboard shortcuts (CMD+A/CTRL+A)
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+      e.preventDefault()
+      inputRef.current?.select()
+      // Mark as selecting when using keyboard shortcut
+      setIsSelecting(true)
+    }
+  }, [])
+
+  // Track mouse down on input to detect selection state
+  const handleInputMouseDown = useCallback(() => {
+    setIsSelecting(true)
+  }, [])
+
+  // Track mouse up on input
+  const handleInputMouseUp = useCallback(() => {
+    // Use setTimeout to check selection after browser has updated it
+    setTimeout(() => {
+      if (inputRef.current) {
+        const selectionLength = Math.abs(
+          (inputRef.current.selectionEnd || 0) - (inputRef.current.selectionStart || 0)
+        )
+        // If there's no selection, user was just clicking (not dragging)
+        if (selectionLength === 0) {
+          setIsSelecting(false)
+        } else {
+          // Keep isSelecting true if there's still a selection
+          setIsSelecting(true)
+        }
+      }
+    }, 0)
+  }, [])
+  
+  // Also check selection state when input loses focus (user clicked away)
+  const handleInputBlur = useCallback(() => {
+    setIsSelecting(false)
+  }, [])
+
+  // Handle hover highlighting on character spans (only when not selecting)
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLSpanElement>) => {
+    // Only trigger hover highlighting if user is not actively selecting text
+    if (isSelecting) return
     if (!onMouseMove) return
+    
+    // Check if there's an active text selection (from keyboard shortcuts, etc.)
+    if (inputRef.current) {
+      const selectionLength = Math.abs(
+        (inputRef.current.selectionEnd || 0) - (inputRef.current.selectionStart || 0)
+      )
+      if (selectionLength > 0) return
+    }
 
     const target = e.target as HTMLSpanElement
     const parent = target.parentElement
@@ -53,10 +103,13 @@ export const NumberInput: React.FC<Props> = ({
     }
     
     onMouseMove(position)
-  }
+  }, [isSelecting, onMouseMove])
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
+    // Reset selection state when user types (selection is cleared)
+    setIsSelecting(false)
   };
 
   const parts = value.split('=');
@@ -87,21 +140,6 @@ export const NumberInput: React.FC<Props> = ({
     });
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (inputRef.current) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const charWidth = 8.4; // Approximate width of a character in the monospace font
-      const clickedPosition = Math.floor((x - 20) / charWidth); // 20px for padding
-      
-      inputRef.current.focus();
-      inputRef.current.setSelectionRange(
-        Math.max(0, Math.min(clickedPosition, input.length)),
-        Math.max(0, Math.min(clickedPosition, input.length))
-      );
-    }
-  };
-
   return (
     <div className={styles.container}>
       <label className={styles.label}>{label}</label>
@@ -112,13 +150,16 @@ export const NumberInput: React.FC<Props> = ({
             type="text"
             value={input}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            onMouseDown={handleInputMouseDown}
+            onMouseUp={handleInputMouseUp}
+            onBlur={handleInputBlur}
             className={styles.hiddenInput}
             placeholder={placeholder}
             style={{ caretColor: 'var(--text-primary)' }}
           />
           <div 
-            className={styles.characters} 
-            onClick={handleClick}
+            className={styles.characters}
           >
             <div className={styles.content}>
               <div className={styles.input}>
@@ -135,4 +176,4 @@ export const NumberInput: React.FC<Props> = ({
       </div>
     </div>
   )
-} 
+}
