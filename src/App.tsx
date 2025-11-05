@@ -25,11 +25,6 @@ interface NumberInputHighlight {
   color: string;
 }
 
-interface CalculationResult {
-  input: NumberValues
-  result: NumberValues
-}
-
 const HOVER_TEXT = 'Hover over numbers to see corresponding bit patterns'
 const OPERATORS_TEXT = 'Operators: + - * / % (arithmetic) & | ^ ~ (bitwise) << >> (shift)'
 
@@ -356,36 +351,6 @@ function App() {
       binary: `${input.binary.trimEnd()}=${result.binary}`,
       ascii: result.ascii
     };
-  };
-
-  /**
-   * @brief Checks if a math expression is complete and ready for evaluation
-   */
-  const isCompleteMathExpression = (value: string): boolean => {
-    // Must have an operator
-    if (!/[+\-*/%&|^~<>]/.test(value)) return false;
-    
-    // Must end with a number
-    if (!/\d$/.test(value)) return false;
-
-    // Special case for unary operator ~
-    if (value.startsWith('~')) {
-      return /^~\d+$/.test(value);
-    }
-
-    // Check for shift operators
-    if (/<{2}|>{2}/.test(value)) {
-      return /^\d+\s*([<>]{2})\s*\d+$/.test(value);
-    }
-    
-    // For expressions with binary operators, must have numbers on both sides
-    const parts = value.split(/([+\-*/%&|^])/).filter(Boolean);
-    if (parts.length < 2) return false;
-    
-    // For binary operators, check both sides are numbers
-    const firstPart = parts[0];
-    const lastPart = parts[parts.length - 1];
-    return /^\d+$/.test(firstPart) && /^\d+$/.test(lastPart);
   };
 
   const handleDecimalChange = (value: string) => {
