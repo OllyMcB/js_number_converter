@@ -2,19 +2,7 @@
  * @brief Highlighting utilities for cross-field highlighting in number conversions
  */
 
-import { NumberValues } from './conversion';
-
-export interface HighlightInfo {
-  sourceType: 'decimal' | 'hex' | 'binary' | 'ascii';
-  position: number;
-  length: number;
-}
-
-export interface NumberInputHighlight {
-  start: number;
-  end: number;
-  color: string;
-}
+import { NumberValues, HighlightInfo, NumberInputHighlight } from '../types';
 
 interface NumberGroup {
   number: string;
@@ -27,13 +15,13 @@ interface NumberGroup {
  * @brief Finds which space-separated number group contains a given position
  * @param value - The full string value
  * @param position - Character position in the string
- * @param prefix - Optional prefix to account for (e.g., "0x" for hex)
+ * @param _prefix - Optional prefix to account for (e.g., "0x" for hex) - currently unused but kept for API consistency
  * @returns NumberGroup information or null if not found
  */
 const findNumberGroupAtPosition = (
   value: string,
   position: number,
-  prefix: string = ''
+  _prefix: string = ''
 ): NumberGroup | null => {
   if (!value || position < 0 || position >= value.length) return null;
 
@@ -83,9 +71,6 @@ const findNumberGroupAtPosition = (
       }
       
       // No operators or couldn't find specific number in expression - return the whole part
-      // Remove prefix if present (e.g., "0x" in hex)
-      const numberWithoutPrefix = part.startsWith(prefix) ? part.slice(prefix.length) : part;
-      
       return {
         number: part,
         start: partStart,

@@ -7,6 +7,9 @@ import eslintConfigPrettier from 'eslint-config-prettier'
 
 /** @type {import('typescript-eslint').Config} */
 export default tseslint.config(
+  {
+    ignores: ['**/dist/**', '**/node_modules/**', '**/.vite/**', '**/build/**'],
+  },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {

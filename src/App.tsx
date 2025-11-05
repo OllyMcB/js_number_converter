@@ -1,35 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { NumberInput } from './components/NumberInput/NumberInput'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { trackEvent } from './analytics'
-import { getHighlights as getHighlightsUtil, HighlightInfo as HighlightInfoUtil } from './utils/highlighting'
-import { NumberValues as NumberValuesUtil } from './utils/conversion'
+import { getHighlights as getHighlightsUtil } from './utils/highlighting'
+import { 
+  padHex, 
+  padBinary, 
+  convertNumber, 
+  formatCalculationResult,
+  convertHexExpressionToDecimal,
+  convertHexExpressionToBinary
+} from './utils/conversion'
+import { evaluateExpression } from './utils/expression'
+import { NumberValues, HighlightInfo, NumberInputHighlight } from './types'
+import { HOVER_TEXT, OPERATORS_TEXT } from './constants'
 import './App.scss'
 
-interface NumberValues {
-  decimal: string
-  hex: string
-  binary: string
-  ascii: string
-}
-
-interface HighlightInfo {
-  sourceType: 'decimal' | 'hex' | 'binary' | 'ascii';
-  position: number;
-  length: number;
-}
-
-interface NumberInputHighlight {
-  start: number;
-  end: number;
-  color: string;
-}
-
-const HOVER_TEXT = 'Hover over numbers to see corresponding bit patterns'
-const OPERATORS_TEXT = 'Operators: + - * / % (arithmetic) & | ^ ~ (bitwise) << >> (shift)'
-
+/**
+ * @brief Main application component for number conversion
+ * @description Handles conversion between decimal, hexadecimal, binary, and ASCII formats
+ * with support for mathematical expressions and cross-field highlighting
+ */
 function App() {
   const [values, setValues] = useState<NumberValues>({
     decimal: '',
@@ -45,316 +38,46 @@ function App() {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
-  // Calculate highlights for each input type based on hover
-  const getHighlights = (type: 'decimal' | 'hex' | 'binary' | 'ascii'): NumberInputHighlight[] => {
+  /**
+   * @brief Calculates highlights for each input type based on hover position
+   * @param type - The input type to calculate highlights for
+   * @returns Array of highlight ranges
+   */
+  const getHighlights = useCallback((type: 'decimal' | 'hex' | 'binary' | 'ascii'): NumberInputHighlight[] => {
     if (!highlight) return [];
 
-    // Convert local HighlightInfo to utility HighlightInfo format
-    const highlightInfo: HighlightInfoUtil = {
-      sourceType: highlight.sourceType,
-      position: highlight.position,
-      length: highlight.length
-    };
-
-    // Convert local NumberValues to utility NumberValues format
-    const numberValues: NumberValuesUtil = {
-      decimal: values.decimal,
-      hex: values.hex,
-      binary: values.binary,
-      ascii: values.ascii
-    };
-
     // Use the utility function which handles all cases correctly
-    return getHighlightsUtil(numberValues, highlightInfo, type);
-  };
+    return getHighlightsUtil(values, highlight, type);
+  }, [values, highlight]);
 
-  const handleMouseMove = (type: 'decimal' | 'hex' | 'binary' | 'ascii', position: number) => {
+  /**
+   * @brief Handles mouse move events to set highlight position
+   * @param type - The source input type
+   * @param position - Character position in the input
+   */
+  const handleMouseMove = useCallback((type: 'decimal' | 'hex' | 'binary' | 'ascii', position: number) => {
     setHighlight({ sourceType: type, position, length: 1 });
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  /**
+   * @brief Handles mouse leave events to clear highlights
+   */
+  const handleMouseLeave = useCallback(() => {
     setHighlight(null);
-  };
-
-  const padHex = (hexStr: string): string => {
-    // Remove '0x' prefix if it exists
-    const hex = hexStr.replace(/^0x/, '').toUpperCase();
-    // If the length is odd, pad with one zero
-    const paddedHex = hex.length % 2 === 1 ? '0' + hex : hex;
-    // Ensure at least 2 digits
-    const finalHex = paddedHex.length === 0 ? '00' : paddedHex;
-    // Add 0x prefix
-    return '0x' + finalHex;
-  };
+  }, []);
 
   /**
-   * @brief Converts all hex numbers in an expression to decimal
-   * @param expression - The hex expression string
-   * @returns Expression with all hex numbers converted to decimal
+   * @brief Handles decimal input changes and converts to other formats
+   * @param value - The decimal input string
    */
-  const convertHexExpressionToDecimal = (expression: string): string => {
-    // Match hex numbers: either "0x" followed by hex digits, or standalone hex digits
-    // Use word boundaries to avoid matching parts of operators
-    // Pattern: matches 0x[0-9a-fA-F]+ OR [0-9a-fA-F]+ that's not preceded by "0x"
-    // We'll use a more sophisticated approach: match all hex numbers, prioritizing 0x prefix
-    
-    // First, match all 0x prefixed hex numbers
-    const withPrefix = /0x[0-9a-fA-F]+/gi;
-    let match: RegExpExecArray | null;
-    const matches: Array<{ start: number; end: number; value: string; decimal: string }> = [];
-    
-    while ((match = withPrefix.exec(expression)) !== null) {
-      matches.push({
-        start: match.index,
-        end: match.index + match[0].length,
-        value: match[0],
-        decimal: parseInt(match[0].toLowerCase().replace(/^0x/, ''), 16).toString()
-      });
-    }
-    
-    // Then, find standalone hex digit sequences that aren't part of a 0x number
-    const standalone = /[0-9a-fA-F]+/gi;
-    standalone.lastIndex = 0;
-    
-    while ((match = standalone.exec(expression)) !== null) {
-      // Check if this match is already covered by a 0x match
-      const isCovered = matches.some(m => 
-        match!.index >= m.start && match!.index < m.end
-      );
-      
-      if (!isCovered) {
-        // Check if this is actually a valid hex number (not part of an operator)
-        const before = expression[match.index - 1] || '';
-        const after = expression[match.index + match[0].length] || '';
-        // Only match if it's surrounded by spaces, operators, or start/end
-        const validContext = /^[\s+\-*/%&|^~<>()]?$/.test(before) && 
-                             /^[\s+\-*/%&|^~<>()]?$/.test(after);
-        
-        if (validContext) {
-          matches.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            value: match[0],
-            decimal: parseInt(match[0], 16).toString()
-          });
-        }
-      }
-    }
-    
-    // Sort matches by position and build result
-    matches.sort((a, b) => a.start - b.start);
-    
-    let result = '';
-    let currentIndex = 0;
-    
-    for (const m of matches) {
-      result += expression.substring(currentIndex, m.start);
-      result += m.decimal;
-      currentIndex = m.end;
-    }
-    result += expression.substring(currentIndex);
-    
-    return result;
-  };
-
-  /**
-   * @brief Converts all hex numbers in an expression to binary
-   * @param expression - The hex expression string
-   * @returns Expression with all hex numbers converted to binary
-   */
-  const convertHexExpressionToBinary = (expression: string): string => {
-    // Similar approach to decimal conversion
-    
-    const withPrefix = /0x[0-9a-fA-F]+/gi;
-    let match: RegExpExecArray | null;
-    const matches: Array<{ start: number; end: number; value: string; binary: string }> = [];
-    
-    while ((match = withPrefix.exec(expression)) !== null) {
-      const hexStr = match[0].toLowerCase().replace(/^0x/, '');
-      const decimal = parseInt(hexStr, 16);
-      if (!isNaN(decimal)) {
-        matches.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          value: match[0],
-          binary: padBinary(decimal.toString(2))
-        });
-      }
-    }
-    
-    const standalone = /[0-9a-fA-F]+/gi;
-    standalone.lastIndex = 0;
-    
-    while ((match = standalone.exec(expression)) !== null) {
-      const isCovered = matches.some(m => 
-        match!.index >= m.start && match!.index < m.end
-      );
-      
-      if (!isCovered) {
-        const before = expression[match.index - 1] || '';
-        const after = expression[match.index + match[0].length] || '';
-        const validContext = /^[\s+\-*/%&|^~<>()]?$/.test(before) && 
-                             /^[\s+\-*/%&|^~<>()]?$/.test(after);
-        
-        if (validContext) {
-          const decimal = parseInt(match[0], 16);
-          if (!isNaN(decimal)) {
-            matches.push({
-              start: match.index,
-              end: match.index + match[0].length,
-              value: match[0],
-              binary: padBinary(decimal.toString(2))
-            });
-          }
-        }
-      }
-    }
-    
-    matches.sort((a, b) => a.start - b.start);
-    
-    let result = '';
-    let currentIndex = 0;
-    
-    for (const m of matches) {
-      result += expression.substring(currentIndex, m.start);
-      result += m.binary;
-      currentIndex = m.end;
-    }
-    result += expression.substring(currentIndex);
-    
-    return result;
-  };
-
-  const padBinary = (binStr: string): string => {
-    // Calculate how many bits we need
-    const len = binStr.length;
-    const targetLength = Math.ceil(len / 8) * 8;
-    return binStr.padStart(targetLength, '0');
-  };
-
-  const convertNumber = (num: number): NumberValues => ({
-    decimal: num.toString(),
-    hex: padHex(num.toString(16).toUpperCase()),
-    binary: padBinary(num.toString(2)),
-    ascii: String.fromCharCode(num)
-  });
-
-  const evaluateExpression = (expression: string, base: number = 10): number | null => {
-    try {
-      // First check if we actually have an operator
-      const hasOperator = /[+\-*/%&|^~<>]/.test(expression);
-      if (!hasOperator) {
-        return null;
-      }
-
-      // Convert input number to binary for bitwise operations
-      const toBinary = (num: number): string => {
-        const binary = num.toString(2);
-        // Calculate how many bits we need (round up to nearest 8)
-        const targetLength = Math.ceil(binary.length / 8) * 8;
-        return binary.padStart(targetLength, '0');
-      };
-
-      // Handle unary NOT (~) operator first
-      if (expression.startsWith('~')) {
-        const num = parseInt(expression.slice(1), base);
-        if (isNaN(num)) return null;
-        
-        // Convert to binary, perform NOT, and convert back
-        const binary = toBinary(num);
-        const inverted = binary.split('').map(bit => bit === '0' ? '1' : '0').join('');
-        return parseInt(inverted, 2);
-      }
-
-      // Handle shift operators
-      const shiftMatch = expression.match(/^(\d+)\s*([<>]{2})\s*(\d+)$/);
-      if (shiftMatch) {
-        const [_, leftNum, operator, rightNum] = shiftMatch;
-        const left = parseInt(leftNum, base);
-        const right = parseInt(rightNum, base);
-        if (isNaN(left) || isNaN(right)) return null;
-        
-        if (operator === '<<') return left << right;
-        if (operator === '>>') return left >> right;
-      }
-
-      // Now split by single operators while preserving them
-      const tokens = expression
-        .split(/([+\-*/%&|^])/)
-        .map(token => token.trim())
-        .filter(t => t !== '');
-      
-      // Now evaluate the expression
-      let result = parseInt(tokens[0], base);
-      if (isNaN(result)) return null;
-
-      for (let i = 1; i < tokens.length; i += 2) {
-        const operator = tokens[i];
-        const nextNum = parseInt(tokens[i + 1], base);
-        
-        if (isNaN(nextNum)) return null;
-
-        // Handle bitwise operations in binary
-        if (['&', '|', '^'].includes(operator)) {
-          const leftBinary = toBinary(result);
-          const rightBinary = toBinary(nextNum);
-          let resultBinary = '';
-
-          switch (operator) {
-            case '&':
-              resultBinary = leftBinary.split('').map((bit, i) => 
-                bit === '1' && rightBinary[i] === '1' ? '1' : '0'
-              ).join('');
-              break;
-            case '|':
-              resultBinary = leftBinary.split('').map((bit, i) => 
-                bit === '1' || rightBinary[i] === '1' ? '1' : '0'
-              ).join('');
-              break;
-            case '^':
-              resultBinary = leftBinary.split('').map((bit, i) => 
-                bit !== rightBinary[i] ? '1' : '0'
-              ).join('');
-              break;
-          }
-          result = parseInt(resultBinary, 2);
-        } else {
-          // Handle arithmetic operations normally
-          switch (operator) {
-            case '+': result += nextNum; break;
-            case '-': result -= nextNum; break;
-            case '*': result *= nextNum; break;
-            case '/': result = Math.floor(result / nextNum); break;
-            case '%': result %= nextNum; break;
-            default: return null;
-          }
-        }
-      }
-      
-      return result;
-    } catch {
-      return null;
-    }
-  };
-
-  const formatCalculationResult = (input: NumberValues, result: NumberValues): NumberValues => {
-    // Remove any trailing spaces before adding the equals sign
-    return {
-      decimal: `${input.decimal.trimEnd()}=${result.decimal}`,
-      hex: `${input.hex.trimEnd()}=${result.hex}`,
-      binary: `${input.binary.trimEnd()}=${result.binary}`,
-      ascii: result.ascii
-    };
-  };
-
-  const handleDecimalChange = (value: string) => {
+  const handleDecimalChange = useCallback((value: string) => {
     // Track decimal input
     if (value) {
       trackEvent('Input', 'Decimal Change', value)
     }
     
     // Always update the decimal field immediately
-    setValues({ ...values, decimal: value });
+    setValues(prev => ({ ...prev, decimal: value }));
 
     // Handle empty input
     if (!value) {
@@ -429,16 +152,20 @@ function App() {
     };
 
     setValues(combinedValues);
-  };
+  }, []);
 
-  const handleHexChange = (value: string) => {
+  /**
+   * @brief Handles hexadecimal input changes and converts to other formats
+   * @param value - The hexadecimal input string
+   */
+  const handleHexChange = useCallback((value: string) => {
     // Track hex input
     if (value) {
       trackEvent('Input', 'Hex Change', value)
     }
     
     // Always update the hex field immediately
-    setValues({ ...values, hex: value });
+    setValues(prev => ({ ...prev, hex: value }));
 
     // Handle empty input
     if (!value) {
@@ -521,16 +248,20 @@ function App() {
     };
 
     setValues(combinedValues);
-  };
+  }, []);
 
-  const handleBinaryChange = (value: string) => {
+  /**
+   * @brief Handles binary input changes and converts to other formats
+   * @param value - The binary input string
+   */
+  const handleBinaryChange = useCallback((value: string) => {
     // Track binary input
     if (value) {
       trackEvent('Input', 'Binary Change', value)
     }
     
     // Always update the binary field immediately
-    setValues({ ...values, binary: value });
+    setValues(prev => ({ ...prev, binary: value }));
 
     // Handle empty input
     if (!value) {
@@ -610,9 +341,13 @@ function App() {
     };
 
     setValues(combinedValues);
-  };
+  }, []);
 
-  const handleAsciiChange = (value: string) => {
+  /**
+   * @brief Handles ASCII input changes and converts to other formats
+   * @param value - The ASCII input string
+   */
+  const handleAsciiChange = useCallback((value: string) => {
     // Track ASCII input
     if (value) {
       trackEvent('Input', 'ASCII Change', value)
@@ -635,7 +370,22 @@ function App() {
       binary: conversions.map(n => n.binary).join(' '),
       ascii: value
     })
-  }
+  }, [])
+
+  /**
+   * @brief Clears all input values and resets the converter
+   */
+  const clearValues = useCallback(() => {
+    // Track clear action
+    trackEvent('Action', 'Clear Values')
+    
+    setValues({
+      decimal: '',
+      hex: '',
+      binary: '',
+      ascii: ''
+    });
+  }, []);
 
   // Add escape key handler
   useEffect(() => {
@@ -647,25 +397,15 @@ function App() {
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, []);
+  }, [clearValues]);
 
-  const clearValues = () => {
-    // Track clear action
-    trackEvent('Action', 'Clear Values')
-    
-    setValues({
-      decimal: '',
-      hex: '',
-      binary: '',
-      ascii: ''
-    });
-  };
-
-  // Track theme changes
-  const handleThemeChange = () => {
+  /**
+   * @brief Handles theme toggle between dark and light mode
+   */
+  const handleThemeChange = useCallback(() => {
     trackEvent('Settings', 'Theme Change', darkMode ? 'Light' : 'Dark')
     setDarkMode(!darkMode)
-  }
+  }, [darkMode])
 
   return (
     <div className="app">

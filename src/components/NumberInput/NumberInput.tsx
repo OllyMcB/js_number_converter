@@ -1,11 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react'
 import styles from './NumberInput.module.scss'
-
-interface NumberInputHighlight {
-  start: number
-  end: number
-  color: string
-}
+import { NumberInputHighlight } from '../../types'
 
 interface Props {
   label: string
@@ -113,7 +108,7 @@ export const NumberInput: React.FC<Props> = ({
     inputRef.current.focus()
     inputRef.current.setSelectionRange(boundaries.start, boundaries.end)
     setIsSelecting(true)
-  }, [input, findWordBoundaries, styles.character])
+  }, [input, findWordBoundaries])
 
   // Handle click on character span or overlay to position cursor
   const handleClick = useCallback((e: React.MouseEvent) => {

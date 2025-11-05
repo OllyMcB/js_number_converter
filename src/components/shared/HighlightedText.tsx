@@ -30,7 +30,7 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({
   placeholder,
 }) => {
   const handleCharacterMouseMove = useCallback(
-    (index: number) => (e: React.MouseEvent<HTMLSpanElement>) => {
+    (index: number) => (_e: React.MouseEvent<HTMLSpanElement>) => {
       if (onMouseMove) {
         onMouseMove(index)
       }
